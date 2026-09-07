@@ -1,0 +1,128 @@
+/* Estilos globales de la app. Los tokens del diseño viven en shared/ui y se
+   importan aquí una sola vez; el resto de estilos son por-componente. */
+@use '../../../libs/shared/ui/src/lib/tokens/design-tokens.scss';
+// Primitivas globales (.btn, .field, .badge, .alert-error). Van DESPUÉS de los
+// tokens porque los consumen. Sin encapsular a propósito: aplican dentro de
+// cualquier componente sin ::ng-deep.
+@use '../../../libs/shared/ui/src/lib/tokens/primitives';
+
+/* Tipografías: Inter (cuerpo) + JetBrains Mono (códigos/números). Se cargan en
+   index.html; aquí solo se aplican las familias y el ajuste de render. */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--fs-14);
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-base);
+  color: var(--text);
+  background: var(--bg);
+
+  /* Inter con eje óptico: el navegador ajusta el trazo al tamaño en uso. */
+  font-optical-sizing: auto;
+  /* Sin esto, Inter se ve más pesada de lo debido en macOS/Retina. */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Jerarquía tipográfica base. Los títulos ≥16px llevan tracking negativo; por
+   debajo de ese tamaño el tracking cerrado perjudica la lectura. */
+h1,
+h2,
+h3,
+h4 {
+  margin: 0;
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--tracking-tight);
+  color: var(--text);
+}
+
+/* Los controles no heredan la fuente por defecto: se fuerza para que inputs,
+   selects y botones no caigan en la fuente del sistema. */
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+/* Foco visible y consistente en toda la app; el foco por puntero no lo dibuja. */
+:focus-visible {
+  outline: 2px solid var(--border-brand);
+  outline-offset: 1px;
+}
+
+/* Clase utilitaria para números/códigos en monoespaciada. */
+.mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Cifras tabulares en TODA tabla: sin esto las columnas numéricas "bailan"
+   entre filas, que es una de las señales de aspecto poco profesional. */
+table {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Impresión: solo el contenido del formulario, sin el chrome de la app ───── */
+@media print {
+  html,
+  body {
+    height: auto !important;
+    background: #fff !important;
+  }
+
+  /* El layout deja de ser grid de alto fijo y fluye en el papel. */
+  erp-main-layout {
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  .app,
+  .app.is-collapsed {
+    display: block !important;
+    height: auto !important;
+  }
+
+  /* Chrome que no se imprime. */
+  .app__navbar,
+  .app__sidebar,
+  .app__backdrop,
+  erp-toaster,
+  erp-confirm-dialog {
+    display: none !important;
+  }
+
+  .app__main {
+    overflow: visible !important;
+  }
+
+  .app__content {
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    overflow: visible !important;
+  }
+
+  /* Controles de grilla que no aplican en papel (búsqueda y paginador). */
+  .grid-toolbar,
+  .grid-foot {
+    display: none !important;
+  }
+}

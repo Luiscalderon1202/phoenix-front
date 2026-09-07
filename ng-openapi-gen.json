@@ -1,0 +1,11 @@
+{
+  "$schema": "node_modules/ng-openapi-gen/ng-openapi-gen-schema.json",
+  "input": "../phoenix-api/api/openapi.yaml",
+  "output": "libs/shared/api-client/src/lib/generated",
+  "module": false,
+  "ignoreUnusedModels": false,
+  "indexFile": true,
+  "serviceSuffix": "Api",
+  "modelIndex": "models",
+  "serviceIndex": "services"
+}

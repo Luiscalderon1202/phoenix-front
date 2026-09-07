@@ -1,0 +1,21 @@
+<section class="filter" [class.is-collapsed]="head() && collapsed()" [class.is-headless]="!head()">
+  @if (head()) {
+    <button type="button" class="filter__head" (click)="toggle()" [attr.aria-expanded]="!collapsed()">
+      <span class="filter__title"><erp-icon name="filter" /> {{ title() }}</span>
+      <span class="filter__toggle">
+        <span>{{ collapsed() ? 'Expandir' : 'Contraer' }}</span>
+        <erp-icon name="chevron" class="filter__caret" />
+      </span>
+    </button>
+  }
+
+  <div class="filter__body">
+    <div class="filter__fields">
+      <ng-content />
+    </div>
+
+    <div class="filter__actions">
+      <ng-content select="[filterActions]" />
+    </div>
+  </div>
+</section>

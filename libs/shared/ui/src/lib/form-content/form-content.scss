@@ -1,0 +1,30 @@
+// Ancla del overlay (position:relative); el scroll vive en el hijo, no en el host, para que
+// el overlay quede fijo sobre la zona visible y no se desplace con el contenido.
+:host {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+// Columna con separación uniforme entre bloques.
+.fc__scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+// Escritorio: ocupa el alto restante (header y filtro conservan su alto) y hace scroll propio.
+@media (min-width: 769px) {
+  :host {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  .fc__scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+  }
+}

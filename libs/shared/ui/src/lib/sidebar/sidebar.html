@@ -1,0 +1,10 @@
+<nav class="sidebar__nav" aria-label="Navegación principal">
+  <erp-nav-tree [nodes]="nodes()" [activeRoute]="activeRoute()" />
+</nav>
+
+<footer class="sidebar__footer">
+  <span>© TEAM - UPS V 0.1</span>
+  @if (appVersion()) {
+    <span class="sidebar__version mono">v{{ appVersion() }}</span>
+  }
+</footer>

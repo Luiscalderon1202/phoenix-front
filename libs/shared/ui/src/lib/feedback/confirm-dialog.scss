@@ -1,0 +1,51 @@
+// Diálogo de confirmación: mismo lenguaje visual que `erp-modal` pero compacto y centrado.
+.cd-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1200; // sobre el modal (1001); por debajo de los toasts si coincidieran
+  background: var(--overlay);
+}
+
+.cd {
+  position: fixed;
+  z-index: 1201;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(420px, calc(100vw - 2rem));
+  padding: 1.25rem;
+  background: var(--surface);
+  border-radius: var(--r-sm);
+  box-shadow: var(--sh-2);
+}
+
+.cd__title {
+  margin: 0 0 0.5rem;
+  font-size: var(--fs-16);
+  font-weight: var(--fw-bold);
+  color: var(--text);
+}
+
+.cd__message {
+  margin: 0 0 1.25rem;
+  font-size: var(--fs-13);
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.cd__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+
+// Botones (mismo estilo que el resto del design system).
+.btn--danger {
+  border-color: var(--danger-solid);
+  background: var(--danger-solid);
+  color: var(--text-on-brand);
+
+  &:hover {
+    background: var(--danger-fg);
+  }
+}

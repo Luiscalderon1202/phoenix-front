@@ -1,0 +1,19 @@
+<erp-modal [(open)]="open" [title]="nombre()" size="xl" [maximizable]="true">
+  @if (url(); as u) {
+    @if (esImagen()) {
+      <img class="fv__img" [src]="u" [alt]="nombre()" />
+    } @else if (esPdf() && safeUrl(); as su) {
+      <iframe class="fv__pdf" [src]="su" [title]="nombre()"></iframe>
+    } @else {
+      <div class="fv__fallback">
+        <erp-icon name="doc" />
+        <p>No se puede previsualizar este tipo de archivo ({{ mime() || 'desconocido' }}).</p>
+        <a class="btn" [href]="u" target="_blank" rel="noopener">
+          <erp-icon name="download" /> Abrir / descargar
+        </a>
+      </div>
+    }
+  } @else {
+    <div class="fv__fallback">Cargando…</div>
+  }
+</erp-modal>

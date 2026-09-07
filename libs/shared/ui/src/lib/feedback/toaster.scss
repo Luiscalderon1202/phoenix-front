@@ -1,0 +1,95 @@
+// Pila de toasts fija arriba a la derecha, por encima de todo (incluido el modal).
+.toaster {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 1100;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  width: min(360px, calc(100vw - 2rem));
+  pointer-events: none; // el contenedor no captura clicks; cada toast sí
+}
+
+.toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.7rem 0.8rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--toast-accent, var(--border-strong));
+  border-radius: var(--r-sm);
+  box-shadow: var(--sh-2);
+  animation: toast-in 0.18s ease;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(8px);
+  }
+}
+
+.toast__icon {
+  flex: none;
+  margin-top: 1px;
+  font-size: var(--icon-lg);
+  color: var(--toast-accent, var(--text-muted));
+}
+
+.toast__body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.toast__title {
+  margin: 0 0 0.1rem;
+  font-size: var(--fs-13);
+  font-weight: var(--fw-bold);
+  color: var(--text);
+}
+
+.toast__text {
+  margin: 0;
+  font-size: var(--fs-13);
+  line-height: 1.35;
+  color: var(--text);
+  word-break: break-word;
+}
+
+.toast__close {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin: -2px -2px 0 0;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: var(--icon-md);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--hover);
+    color: var(--text);
+  }
+}
+
+// Acento por tipo (borde izquierdo + icono).
+.toast--success {
+  --toast-accent: var(--success-solid);
+}
+.toast--error {
+  --toast-accent: var(--danger-solid);
+}
+.toast--warning {
+  --toast-accent: var(--warn-solid);
+}
+.toast--info {
+  --toast-accent: var(--brand-700);
+}

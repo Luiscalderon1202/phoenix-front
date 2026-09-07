@@ -1,0 +1,51 @@
+<ng-template #branch let-items let-level="level">
+  @for (node of items; track node.id) {
+    <li class="nav-tree__node" [attr.data-level]="level">
+      @if (node.route && node.external) {
+        <!-- Pantalla aun no migrada: sale al ERP legacy con navegacion completa.
+             No lleva routerLinkActive porque nunca es la ruta activa de Angular. -->
+        <a class="nav-tree__row nav-tree__row--external" [href]="node.route">
+          <span class="nav-tree__icon"><erp-icon [name]="node.icon" /></span>
+          <span class="nav-tree__label">{{ node.label }}</span>
+          <span class="nav-tree__external" aria-hidden="true" title="Abre el sistema anterior">&#8599;</span>
+        </a>
+      } @else if (node.route) {
+        <a
+          class="nav-tree__row"
+          [routerLink]="node.route"
+          routerLinkActive="is-active"
+          [routerLinkActiveOptions]="{ exact: false }"
+        >
+          <span class="nav-tree__icon"><erp-icon [name]="node.icon" /></span>
+          <span class="nav-tree__label">{{ node.label }}</span>
+        </a>
+      } @else {
+        <button
+          type="button"
+          class="nav-tree__row nav-tree__row--group"
+          [class.is-open]="isExpanded(node.id)"
+          [attr.aria-expanded]="isExpanded(node.id)"
+          (click)="toggle(node, items)"
+        >
+          <span class="nav-tree__icon"><erp-icon [name]="node.icon" /></span>
+          <span class="nav-tree__label">{{ node.label }}</span>
+          <span class="nav-tree__caret" [class.is-open]="isExpanded(node.id)" aria-hidden="true">
+            <erp-icon name="chevron" />
+          </span>
+        </button>
+
+        @if (node.children?.length && isExpanded(node.id)) {
+          <ul class="nav-tree__children">
+            <ng-container
+              *ngTemplateOutlet="branch; context: { $implicit: node.children, level: level + 1 }"
+            />
+          </ul>
+        }
+      }
+    </li>
+  }
+</ng-template>
+
+<ul class="nav-tree">
+  <ng-container *ngTemplateOutlet="branch; context: { $implicit: nodes(), level: 1 }" />
+</ul>

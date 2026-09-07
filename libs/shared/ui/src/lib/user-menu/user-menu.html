@@ -1,0 +1,62 @@
+<button
+  type="button"
+  class="userchip"
+  [class.is-open]="open()"
+  (click)="toggle()"
+  [attr.aria-expanded]="open()"
+  aria-haspopup="menu"
+>
+  <span class="userchip__avatar" aria-hidden="true">
+    <img src="/assets/logo-mark.svg" alt="" class="avatar__img" />
+  </span>
+  <span class="userchip__meta">
+    <span class="userchip__name">{{ userName() }}</span>
+    @if (userRole()) {
+      <span class="userchip__role">{{ userRole() }}</span>
+    }
+  </span>
+  <span class="userchip__caret" aria-hidden="true"><erp-icon name="chevron" /></span>
+</button>
+
+@if (open()) {
+  <div class="menu" role="menu">
+    <div class="menu__header">
+      <span class="menu__avatar" aria-hidden="true">
+        <img src="/assets/logo-mark.svg" alt="" class="avatar__img" />
+      </span>
+      <span class="menu__id">
+        <strong>{{ userName() }}</strong>
+        @if (userRole()) {
+          <small>{{ userRole() }}</small>
+        }
+      </span>
+    </div>
+
+    <div class="menu__group" role="group">
+      <button type="button" class="menu__item" role="menuitem" (click)="emit('profile')">
+        <erp-icon name="user" /> Mis datos
+      </button>
+      <button type="button" class="menu__item" role="menuitem" (click)="emit('messages')">
+        <erp-icon name="mail" /> Mensajes
+      </button>
+      <button type="button" class="menu__item" role="menuitem" (click)="emit('resources')">
+        <erp-icon name="folder" /> Mis Recursos
+      </button>
+    </div>
+
+    <div class="menu__group" role="group">
+      <button type="button" class="menu__item" role="menuitem" (click)="emit('settings')">
+        <erp-icon name="settings" /> Configuración
+      </button>
+      <button type="button" class="menu__item menu__item--danger" role="menuitem" (click)="onLogout()">
+        <erp-icon name="logout" /> Salir
+      </button>
+    </div>
+
+    <div class="menu__group" role="group">
+      <button type="button" class="menu__item" role="menuitem" (click)="emit('help')">
+        <erp-icon name="help" /> Ayuda
+      </button>
+    </div>
+  </div>
+}

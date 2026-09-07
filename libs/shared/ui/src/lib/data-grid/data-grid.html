@@ -1,0 +1,263 @@
+<div class="grid-block">
+  @if (showToolbar()) {
+    <div class="grid-toolbar">
+      <div class="grid-search">
+        <erp-icon name="search" />
+        <input
+          type="text"
+          placeholder="Buscar en resultados…"
+          [value]="searchText()"
+          (input)="searchText.set($any($event.target).value)"
+        />
+      </div>
+
+      <div class="grid-actions">
+        <button type="button" class="iconbtn" title="Actualizar" (click)="refresh.emit()">
+          <erp-icon name="refresh" />
+        </button>
+        <button type="button" class="iconbtn" title="Columnas">
+          <erp-icon name="columns" />
+        </button>
+        <button
+          type="button"
+          class="iconbtn"
+          [class.is-active]="density() === 'compact'"
+          title="Densidad"
+          (click)="toggleDensity()"
+        >
+          <erp-icon name="density" />
+        </button>
+        <button type="button" class="iconbtn" title="Pantalla completa">
+          <erp-icon name="fullscreen" />
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- `.tablewrap` es el contenedor de scroll: la cabecera y el tfoot quedan
+       fijos con `position: sticky` (antes lo hacía el modo scrollable de p-table). -->
+  <div class="tablewrap">
+    <table class="dt" [class.is-compact]="density() === 'compact'">
+      <thead>
+        <tr>
+          @if (selectable()) {
+            <th class="col-select">
+              <input
+                type="checkbox"
+                [checked]="allSelected()"
+                [indeterminate]="someSelected()"
+                (change)="toggleAll()"
+                aria-label="Seleccionar todo"
+              />
+            </th>
+          }
+          @for (col of columns(); track col.key) {
+            <th
+              [class.num]="col.align === 'right'"
+              [style.width]="col.width"
+              [attr.aria-sort]="ariaSortOf(col)"
+            >
+              @if (groups() && $first) {
+                <!-- Expandir/contraer TODOS los grupos: vive en la primera columna porque la
+                     columna agrupadora no tiene cabecera propia (no está en `columns()`). -->
+                <button
+                  type="button"
+                  class="group-all"
+                  [title]="allExpanded() ? 'Contraer todo' : 'Expandir todo'"
+                  [attr.aria-expanded]="allExpanded()"
+                  (click)="toggleAllGroups()"
+                >
+                  <erp-icon name="chevron" class="group-chev" [class.is-open]="allExpanded()" />
+                </button>
+              }
+              @if (col.sortable) {
+                <!-- Botón (no un th clicable) para tener teclado y foco sin añadir roles. -->
+                <button type="button" class="sort" (click)="toggleSort(col.key)">
+                  {{ headerOf(col) }}
+                  @if (sort()?.key === col.key) {
+                    <erp-icon
+                      name="chevron"
+                      class="sort-dir"
+                      [class.is-desc]="sort()?.dir === 'desc'"
+                    />
+                  } @else {
+                    <erp-icon name="sort" />
+                  }
+                </button>
+              } @else {
+                {{ headerOf(col) }}
+              }
+            </th>
+          }
+          @if (showActionsColumn()) {
+            <th class="col-actions">Acciones</th>
+          }
+          @if (reorderable()) {
+            <th class="col-reorder" aria-label="Reordenar"></th>
+          }
+        </tr>
+      </thead>
+
+      <!-- Plantilla de fila de datos: la comparten el modo plano y el agrupado. -->
+      <ng-template #dataRow let-row let-rowIndex="rowIndex" let-child="child">
+        <tr
+          [class.is-selected]="isSelected(row)"
+          [class.is-drop-target]="dropIndex() === rowIndex"
+          [class.child-tr]="child"
+          (click)="rowClick.emit(row)"
+          (dragstart)="onDragStart(rowIndex)"
+          (dragover)="onDragOver($event, rowIndex)"
+          (drop)="onDrop($event)"
+          (dragend)="onDragEnd($event)"
+        >
+          @if (selectable()) {
+            <td class="col-select" [attr.data-label]="''" (click)="$event.stopPropagation()">
+              <input
+                type="checkbox"
+                [checked]="isSelected(row)"
+                (change)="toggleRow(row)"
+                aria-label="Seleccionar fila"
+              />
+            </td>
+          }
+          @for (col of columns(); track col.key) {
+            <td
+              [class.num]="col.align === 'right'"
+              [class.code]="col.mono"
+              [attr.data-label]="headerOf(col)"
+            >
+              @if (cellTemplateFor(col.key); as cellTpl) {
+                <ng-container
+                  [ngTemplateOutlet]="cellTpl"
+                  [ngTemplateOutletContext]="{ $implicit: row, column: col }"
+                />
+              } @else {
+                {{ cellValue(row, col) }}
+              }
+            </td>
+          }
+          @if (showActionsColumn()) {
+            <td
+              class="col-actions"
+              [attr.data-label]="'Acciones'"
+              (click)="$event.stopPropagation()"
+            >
+              @if (rowActionsTpl(); as actionsTpl) {
+                <ng-container
+                  [ngTemplateOutlet]="actionsTpl"
+                  [ngTemplateOutletContext]="{ $implicit: row }"
+                />
+              }
+            </td>
+          }
+          @if (reorderable()) {
+            <td class="col-reorder" [attr.data-label]="''" (click)="$event.stopPropagation()">
+              <!-- El arrastre se arma solo mientras se sujeta el handle: así la fila
+                   no se vuelve arrastrable al seleccionar texto en cualquier celda. -->
+              <span
+                class="grid-action grid-reorder"
+                title="Mover (arrastrar)"
+                (pointerdown)="armDrag($event, true)"
+                (pointerup)="armDrag($event, false)"
+              >
+                <erp-icon name="move" />
+              </span>
+            </td>
+          }
+        </tr>
+      </ng-template>
+
+      <tbody>
+        @if (groups(); as rowGroups) {
+          @for (g of rowGroups; track g.key) {
+            <!-- Fila de grupo: rótulo + subtotales. El clic en la fila entera alterna el
+                 grupo; el <button> interno solo aporta foco y teclado (su clic burbujea). -->
+            <tr class="group-tr" (click)="toggleGroup(g.key)">
+              @if (selectable()) {
+                <td class="col-select is-blank"></td>
+              }
+              @for (col of columns(); track col.key) {
+                <td
+                  [class.num]="col.align === 'right'"
+                  [class.is-blank]="!$first && !col.groupCell"
+                  [attr.data-label]="$first ? '' : headerOf(col)"
+                >
+                  @if ($first) {
+                    <button
+                      type="button"
+                      class="group-toggle"
+                      [attr.aria-expanded]="isExpanded(g.key)"
+                    >
+                      <erp-icon
+                        name="chevron"
+                        class="group-chev"
+                        [class.is-open]="isExpanded(g.key)"
+                      />
+                      <span class="group-name">{{ g.key || '—' }}</span>
+                      <span class="group-count">{{ g.rows.length }}</span>
+                    </button>
+                  } @else if (col.groupCell; as groupCell) {
+                    {{ groupCell(g.rows) }}
+                  }
+                </td>
+              }
+              @if (showActionsColumn()) {
+                <td class="col-actions is-blank"></td>
+              }
+              @if (reorderable()) {
+                <td class="col-reorder is-blank"></td>
+              }
+            </tr>
+
+            @if (isExpanded(g.key)) {
+              @for (row of g.rows; track $index) {
+                <ng-container
+                  [ngTemplateOutlet]="dataRow"
+                  [ngTemplateOutletContext]="{ $implicit: row, rowIndex: -1, child: true }"
+                />
+              }
+            }
+          } @empty {
+            <tr class="empty-tr">
+              <td [attr.colspan]="colspan()" class="empty-row">
+                @if (!loading()) {
+                  Sin datos para mostrar
+                }
+              </td>
+            </tr>
+          }
+        } @else {
+          @for (row of viewRows(); track $index; let rowIndex = $index) {
+            <ng-container
+              [ngTemplateOutlet]="dataRow"
+              [ngTemplateOutletContext]="{ $implicit: row, rowIndex, child: false }"
+            />
+          } @empty {
+            <tr class="empty-tr">
+              <!-- Durante la carga el overlay cubre la grilla; no mostramos "Sin datos" debajo. -->
+              <td [attr.colspan]="colspan()" class="empty-row">
+                @if (!loading()) {
+                  Sin datos para mostrar
+                }
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+
+      @if (showFooter()) {
+        <tfoot>
+          <ng-container
+            [ngTemplateOutlet]="footerTpl()!"
+            [ngTemplateOutletContext]="{ $implicit: columns() }"
+          />
+        </tfoot>
+      }
+    </table>
+  </div>
+
+  <ng-content select="[gridPagination]" />
+
+  <!-- Overlay de carga unificado. Cubre toda la grilla. -->
+  <erp-loading-overlay [show]="loading()" />
+</div>

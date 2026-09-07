@@ -1,0 +1,71 @@
+<div class="combo" [class.is-open]="open()" (focusout)="onFocusOut($event)">
+  <button
+    type="button"
+    class="combo__control"
+    [class.is-placeholder]="selectedLabel() === null"
+    [attr.aria-expanded]="open()"
+    [disabled]="disabled()"
+    (click)="toggle()"
+    (keydown)="onKeydown($event)"
+  >
+    <span class="combo__value">{{ selectedLabel() ?? placeholder() }}</span>
+
+    @if (clearable() && selectedLabel() !== null && !disabled()) {
+      <span
+        class="combo__clear"
+        role="button"
+        tabindex="-1"
+        aria-label="Limpiar selección"
+        (click)="clear($event)"
+      >
+        <erp-icon name="close" />
+      </span>
+    }
+
+    <erp-icon name="chevron" class="combo__chev" />
+  </button>
+
+  @if (open()) {
+    <div class="combo__panel">
+      @if (searchable()) {
+        <div class="combo__search">
+          <erp-icon name="search" class="combo__search-icon" />
+          <input
+            type="text"
+            class="combo__search-input"
+            autocomplete="off"
+            [placeholder]="searchPlaceholder()"
+            [value]="query()"
+            (input)="onQuery($event)"
+            (keydown)="onKeydown($event)"
+          />
+        </div>
+      }
+
+      <ul class="combo__list" role="listbox">
+        @for (it of filtered(); track it[bindValue()]; let i = $index) {
+          <li>
+            <button
+              type="button"
+              class="combo__option"
+              role="option"
+              [class.is-active]="i === active()"
+              [attr.aria-selected]="it[bindValue()] === value()"
+              (mousedown)="$event.preventDefault()"
+              (mouseenter)="active.set(i)"
+              (click)="choose(it)"
+            >
+              {{ it[bindLabel()] }}
+            </button>
+          </li>
+        } @empty {
+          <li class="combo__empty">Sin coincidencias</li>
+        }
+      </ul>
+
+      @if (hiddenCount() > 0) {
+        <div class="combo__more">+{{ hiddenCount() }} más… escribe para filtrar</div>
+      }
+    </div>
+  }
+</div>

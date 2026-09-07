@@ -1,0 +1,71 @@
+// No ocupa caja propia: el .overlay se ancla al ancestro relativo más cercano.
+:host {
+  display: contents;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  background: rgba(255, 255, 255, 0.62);
+  backdrop-filter: blur(1px);
+  // Bloquea clics/scroll sobre el contenido de abajo mientras carga.
+  cursor: progress;
+}
+
+.overlay__spinner {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 3px solid var(--border-strong);
+  border-top-color: var(--brand-800);
+  animation: erp-spin 0.7s linear infinite;
+}
+
+.overlay__label {
+  font-size: var(--fs-13);
+  font-weight: var(--fw-semibold);
+  color: var(--text-muted);
+}
+
+// Variante grande: bloqueo de página completa. Spinner/etiqueta mayores y fondo más opaco
+// para que el "procesando" sea inequívoco y tape por completo lo que hay debajo.
+.overlay--lg {
+  gap: 1rem;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(2px);
+
+  .overlay__spinner {
+    width: 64px;
+    height: 64px;
+    border-width: 5px;
+  }
+
+  .overlay__label {
+    font-size: var(--fs-14);
+  }
+}
+
+@keyframes erp-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// Respeta la preferencia de movimiento reducido: el spinner se atenúa en vez de girar.
+@media (prefers-reduced-motion: reduce) {
+  .overlay__spinner {
+    animation: erp-pulse 1.2s ease-in-out infinite;
+  }
+}
+
+@keyframes erp-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}

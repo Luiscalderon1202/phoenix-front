@@ -1,0 +1,117 @@
+.nav-tree,
+.nav-tree__children {
+  list-style: none;
+  // El menu lateral es 13px de forma uniforme: antes la lista heredaba 11px y
+  // solo la etiqueta subia a 13, con lo que cualquier texto no cubierto por
+  // .nav-tree__label salia dos pasos mas pequeno.
+  font-size: var(--fs-13);
+  margin: 0;
+  padding: 0;
+}
+
+.nav-tree__row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  width: 100%;
+  padding: var(--sp-2) var(--sp-3);
+  border: 0;
+  border-left: 3px solid transparent;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease),
+    border-left-color var(--dur-fast) var(--ease);
+
+  &:hover {
+    background: var(--hover);
+    color: var(--active-text);
+    border-left-color: var(--brand-600);
+
+    .nav-tree__icon {
+      color: var(--active-text);
+    }
+  }
+
+  // Indentación por nivel: la guía izquierda crece con la profundidad.
+  [data-level='2'] > & {
+    padding-left: var(--sp-8);
+  }
+
+  [data-level='3'] > & {
+    padding-left: var(--sp-12);
+  }
+}
+
+.nav-tree__icon {
+  display: inline-flex;
+  font-size: var(--icon-lg);
+  color: var(--text-muted);
+  flex: none;
+}
+
+.nav-tree__label {
+  flex: 1 1 auto;
+  font-size: var(--fs-13);
+  // Antes `200`: un peso que NUNCA se llegó a renderizar (ni Open Sans ni Inter
+  // se cargaban por debajo de 400, así que el navegador lo colapsaba a 400).
+  // Ahora que el rango es 100..900 sí surtiría efecto, y a 13px quedaría
+  // filiforme: se fija en la escala del sistema.
+  font-weight: var(--fw-medium);
+  letter-spacing: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+// Nodos padre (los que agrupan, sin ruta propia): semibold para que funcionen
+// como encabezado de sección frente a las hojas. Aplica a cualquier nivel.
+// A 13px, 700 pesaba demasiado frente al 500 de las hojas.
+.nav-tree__row--group .nav-tree__label {
+  font-weight: var(--fw-semibold);
+}
+
+.nav-tree__caret {
+  font-size: var(--icon-sm);
+  color: var(--text-dim);
+  transition: transform var(--dur-fast) var(--ease);
+
+  &.is-open {
+    transform: rotate(90deg);
+  }
+}
+
+// Item activo (hoja): pill + barra lateral de acento.
+.nav-tree__row.is-active {
+  color: var(--active-text);
+  background: var(--active);
+  border-left-color: var(--accent-500);
+  font-weight: var(--fw-semibold);
+  .nav-tree__icon {
+    color: var(--active-text);
+  }
+}
+
+// Grupo abierto: leve resalte del encabezado.
+.nav-tree__row--group.is-open {
+  color: var(--active-text);
+
+  .nav-tree__icon {
+    color: var(--active-text);
+  }
+}
+
+// Hoja que sale al ERP legacy. Se marca en vez de disimularlo: el usuario debe
+// saber que va a cambiar de aplicacion (pierde el estado de la pantalla actual).
+.nav-tree__external {
+  margin-left: auto;
+  padding-left: var(--sp-1);
+  font-size: var(--fs-11);
+  color: var(--text-dim);
+  flex: none;
+}

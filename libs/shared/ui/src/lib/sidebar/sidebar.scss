@@ -1,0 +1,37 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  // El ancho lo manda la columna del grid del layout (var(--sidebar-w) → 0 al colapsar).
+  // El contenido interno mantiene ancho fijo para deslizarse sin reflujo.
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+}
+
+.sidebar__nav {
+  flex: 1 1 auto;
+  width: var(--sidebar-w);
+  overflow-y: auto;
+  padding: var(--sp-2) 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--n-300) transparent;
+}
+
+.sidebar__footer {
+  flex: none;
+  width: var(--sidebar-w);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--sp-2) var(--sp-4);
+  border-top: 1px solid var(--border-subtle);
+  color: var(--text-dim);
+  font-size: var(--fs-11);
+}
+
+.sidebar__version {
+  color: var(--text-muted);
+}

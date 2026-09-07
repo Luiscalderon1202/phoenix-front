@@ -1,0 +1,48 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--sp-4);
+  margin-bottom: var(--sp-3);
+}
+
+.page-header__left {
+  min-width: 0;
+}
+
+// El h1 estaba a 16px sobre un cuerpo de 14px (ratio 1.14): no marcaba el inicio
+// de la pantalla. A 20px/600 con tracking cerrado sí lee como título de página.
+.page-header__title {
+  margin: var(--sp-1) 0 0;
+  // Titulo de pagina: 24 / 600 / 1.25.
+  font-size: var(--fs-24);
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--tracking-tight);
+  color: var(--text);
+}
+
+// El subtítulo estaba a 10.5px — ilegible y sin relación con la escala.
+.page-header__subtitle {
+  margin: var(--sp-1) 0 0;
+  font-size: var(--fs-13);
+  line-height: var(--lh-base);
+  color: var(--text-muted);
+}
+
+.page-header__actions {
+  display: inline-flex;
+  // Ancladas arriba: el bloque izquierdo (breadcrumbs+título+subtítulo) es más
+  // alto y sin esto las acciones quedarían centradas respecto a él.
+  // Antes vivía como `::ng-deep erp-page-header .page-header__actions` repetido
+  // en 51 páginas; es propiedad de este componente, no de quien lo usa.
+  align-self: flex-start;
+  align-items: center;
+  gap: var(--sp-2);
+}

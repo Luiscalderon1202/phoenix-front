@@ -1,0 +1,18 @@
+@if (items().length) {
+  <div class="toaster" role="region" aria-label="Notificaciones">
+    @for (n of items(); track n.id) {
+      <div class="toast" [class]="'toast--' + n.kind" role="status">
+        <erp-icon [name]="iconOf(n.kind)" class="toast__icon" />
+        <div class="toast__body">
+          @if (n.title) {
+            <p class="toast__title">{{ n.title }}</p>
+          }
+          <p class="toast__text">{{ n.text }}</p>
+        </div>
+        <button type="button" class="toast__close" (click)="dismiss(n.id)" aria-label="Cerrar">
+          <erp-icon name="close" />
+        </button>
+      </div>
+    }
+  </div>
+}

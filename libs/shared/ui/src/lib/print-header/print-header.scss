@@ -1,0 +1,67 @@
+// Solo se muestra al imprimir; en pantalla los filtros ya viven en el `erp-filter-panel`.
+:host {
+  display: none;
+}
+
+@media print {
+  :host {
+    display: block;
+  }
+}
+
+.print-header {
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 2px solid var(--brand-800);
+}
+
+.print-header__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.print-header__title {
+  margin: 0;
+  font-size: var(--fs-16);
+  font-weight: var(--fw-bold);
+  color: var(--text);
+}
+
+.print-header__subtitle {
+  margin: 0.15rem 0 0;
+  font-size: var(--fs-12);
+  color: var(--text-muted);
+}
+
+.print-header__date {
+  flex: none;
+  font-size: var(--fs-11);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.print-header__fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 1.5rem;
+  margin: 0.6rem 0 0;
+}
+
+.print-header__field {
+  display: flex;
+  gap: 0.35rem;
+  font-size: var(--fs-12);
+
+  dt {
+    font-weight: var(--fw-bold);
+    color: var(--text-muted);
+  }
+
+  dd {
+    margin: 0;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+}

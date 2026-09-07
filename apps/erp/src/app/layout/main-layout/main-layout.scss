@@ -1,0 +1,101 @@
+:host {
+  display: block;
+  width: 100%;
+  height: 100vh;
+  overflow-x: hidden; // evita que un hijo ligeramente más ancho desplace todo el layout
+}
+
+.app {
+  display: grid;
+  grid-template-columns: var(--sidebar-w) 1fr;
+  grid-template-rows: var(--navbar-h) 1fr;
+  grid-template-areas:
+    'navbar navbar'
+    'sidebar main';
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+  transition: grid-template-columns 0.18s ease;
+}
+
+.app.is-collapsed {
+  grid-template-columns: 0 1fr;
+}
+
+.app__navbar {
+  grid-area: navbar;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  box-shadow: var(--sh-1);
+}
+
+.app__sidebar {
+  grid-area: sidebar;
+  overflow: hidden; // al colapsar la columna a 0, el contenido se oculta sin reflujo
+}
+
+.app__main {
+  grid-area: main;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  background: var(--bg); // gris claro de fondo
+}
+
+// El contenido NO es una superficie: es el lienzo. Antes era una hoja blanca con
+// borde y radio, y dentro las tarjetas volvían a ser blancas con borde — hoja
+// sobre hoja, sin contraste ni profundidad (el aspecto "documento"). Ahora el
+// lienzo es el gris de --bg y cada panel/grilla flota encima con su elevación.
+.app__content {
+  flex: 1 1 auto;
+  overflow: auto;
+  padding: var(--content-gutter);
+  background: transparent;
+
+  // El scroll interno usa scrollbar fina para no robar ancho a las tablas.
+  scrollbar-width: thin;
+  scrollbar-color: var(--n-300) transparent;
+}
+
+// Backdrop del drawer móvil: oculto en escritorio, solo visible en el breakpoint móvil.
+.app__backdrop {
+  display: none;
+}
+
+// ── Móvil: el sidebar pasa a ser un drawer superpuesto ──────────────────────
+@media (max-width: 768px) {
+  .app,
+  .app.is-collapsed {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      'navbar'
+      'main';
+  }
+
+  // `.app .app__sidebar` (2 clases) gana especificidad al `:host { width:100% }` del sidebar.
+  .app .app__sidebar {
+    position: fixed;
+    top: var(--navbar-h);
+    left: 0;
+    bottom: 0;
+    z-index: 40;
+    width: var(--sidebar-w);
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+    box-shadow: var(--sh-2);
+  }
+
+  .app.is-mobile-open .app__sidebar {
+    transform: translateX(0);
+  }
+
+  .app__backdrop {
+    display: block;
+    position: fixed;
+    inset: var(--navbar-h) 0 0 0;
+    z-index: 30;
+    background: var(--overlay);
+  }
+}

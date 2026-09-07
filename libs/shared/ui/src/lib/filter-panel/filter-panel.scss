@@ -1,0 +1,145 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+// Tarjeta: radio md (las tarjetas no comparten radio con botones/chips) y
+// hairline por inset-shadow en vez de border — no ocupa layout y en 2x se ve
+// más fino. La elevación de 2 capas es la que la separa del lienzo.
+.filter {
+  background: var(--surface);
+  border-radius: var(--r-md);
+  box-shadow: var(--hairline), var(--sh-1);
+  // overflow visible: los dropdowns de las acciones (p.ej. erp-export-menu) pueden
+  // desbordar el panel sin recortarse. Las esquinas se redondean en cada hijo.
+  overflow: visible;
+}
+
+.filter__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: var(--sp-3) var(--sp-4);
+  border: 0;
+  border-radius: var(--r-md) var(--r-md) 0 0; // hereda las esquinas superiores del panel
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+
+  transition: background var(--dur-fast) var(--ease);
+
+  &:hover {
+    background: var(--hover);
+  }
+}
+
+// Colapsado: la cabecera es el único elemento visible → redondea las 4 esquinas.
+.filter.is-collapsed .filter__head {
+  border-radius: var(--r-md);
+}
+
+.filter__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: var(--fs-14);
+  font-weight: var(--fw-semibold);
+
+  .erp-icon {
+    font-size: var(--icon-lg);
+    color: var(--text-muted);
+  }
+}
+
+.filter__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: var(--fs-12);
+  color: var(--text-muted);
+}
+
+.filter__caret {
+  font-size: var(--icon-md);
+  transition: transform var(--dur-base) var(--ease);
+  transform: rotate(90deg); // apunta hacia abajo (panel abierto)
+}
+
+.filter.is-collapsed .filter__caret {
+  transform: rotate(0deg);
+}
+
+.filter__body {
+  padding: var(--sp-4);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.filter.is-collapsed .filter__body {
+  display: none;
+}
+
+// Sin cabecera: el cuerpo no necesita la línea superior (no hay nada encima de él).
+.filter.is-headless .filter__body {
+  border-top: 0;
+}
+
+// Grid de 12 columnas: la página coloca cada .field con .f-2/.f-4/.f-6/.f-12.
+.filter__fields {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: var(--sp-4);
+}
+
+// ── Campos proyectados ──────────────────────────────────────────────────
+// El ASPECTO de `.field` (etiqueta, input, select, foco) lo aporta la primitiva
+// global; aquí solo se decide su COLOCACIÓN en la rejilla de 12 columnas.
+// Sigue haciendo falta ::ng-deep porque las reglas cruzan el límite de
+// proyección de contenido.
+:host ::ng-deep {
+  .field {
+    grid-column: span 3;
+  }
+
+  .field.f-2 {
+    grid-column: span 2;
+  }
+  .field.f-4 {
+    grid-column: span 4;
+  }
+  .field.f-6 {
+    grid-column: span 6;
+  }
+  .field.f-12 {
+    grid-column: span 12;
+  }
+}
+
+@media (max-width: 900px) {
+  :host ::ng-deep .field,
+  :host ::ng-deep .field.f-2,
+  :host ::ng-deep .field.f-4,
+  :host ::ng-deep .field.f-6 {
+    grid-column: span 6;
+  }
+}
+
+// ── Acciones (botones proyectados por la página vía slot [filterActions]) ──
+.filter__actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--sp-4);
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--border-subtle);
+}
+
+// Solo la disposición en fila. El estilo de los botones lo da la primitiva
+// global `.btn` / `.btn--primary` / `.btn--danger`.
+:host ::ng-deep [filterActions] {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--sp-2);
+}

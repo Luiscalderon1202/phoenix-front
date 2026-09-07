@@ -1,0 +1,22 @@
+<header class="print-header">
+  <div class="print-header__top">
+    <div>
+      <h2 class="print-header__title">{{ title() }}</h2>
+      @if (subtitle()) {
+        <p class="print-header__subtitle">{{ subtitle() }}</p>
+      }
+    </div>
+    <span class="print-header__date">Impreso: {{ fecha }}</span>
+  </div>
+
+  @if (fields().length) {
+    <dl class="print-header__fields">
+      @for (f of fields(); track f.label) {
+        <div class="print-header__field">
+          <dt>{{ f.label }}:</dt>
+          <dd>{{ f.value || '—' }}</dd>
+        </div>
+      }
+    </dl>
+  }
+</header>

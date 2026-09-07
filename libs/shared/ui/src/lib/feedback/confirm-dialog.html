@@ -1,0 +1,20 @@
+@if (pending(); as c) {
+  <div class="cd-backdrop" (click)="cancel()" aria-hidden="true"></div>
+  <div class="cd" role="alertdialog" aria-modal="true" [attr.aria-label]="c.title">
+    <h2 class="cd__title">{{ c.title }}</h2>
+    <p class="cd__message">{{ c.message }}</p>
+
+    <div class="cd__actions">
+      <button type="button" class="btn" (click)="cancel()">{{ c.cancelText }}</button>
+      <button
+        type="button"
+        class="btn"
+        [class.btn--primary]="c.tone === 'default'"
+        [class.btn--danger]="c.tone === 'danger'"
+        (click)="accept()"
+      >
+        {{ c.confirmText }}
+      </button>
+    </div>
+  </div>
+}

@@ -1,0 +1,41 @@
+<div class="donut">
+  <svg class="donut__svg" viewBox="0 0 120 120" role="img" aria-label="Gráfico de dona">
+    <g transform="rotate(-90 60 60)">
+      <!-- Pista de fondo (anillo completo tenue). -->
+      <circle
+        class="donut__track"
+        cx="60"
+        cy="60"
+        [attr.r]="r()"
+        fill="none"
+        [attr.stroke-width]="thickness()"
+      />
+      @for (a of arcs(); track a.label) {
+        @if (a.dash > 0) {
+          <circle
+            cx="60"
+            cy="60"
+            [attr.r]="r()"
+            fill="none"
+            [attr.stroke]="a.color"
+            [attr.stroke-width]="thickness()"
+            [attr.stroke-dasharray]="a.dash + ' ' + (circ() - a.dash)"
+            [attr.stroke-dashoffset]="a.offset"
+          />
+        }
+      }
+    </g>
+  </svg>
+
+  @if (legend()) {
+    <ul class="donut__legend">
+      @for (a of arcs(); track a.label) {
+        <li>
+          <span class="donut__swatch" [style.background]="a.color"></span>
+          <span class="donut__label">{{ a.label }}</span>
+          <span class="donut__pct">{{ a.pct | number: '1.1-1' }}%</span>
+        </li>
+      }
+    </ul>
+  }
+</div>

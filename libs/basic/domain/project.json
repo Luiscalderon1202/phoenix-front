@@ -1,0 +1,13 @@
+{
+  "name": "basic-domain",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/basic/domain/src",
+  "prefix": "erp",
+  "projectType": "library",
+  "tags": ["scope:basic", "type:domain"],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

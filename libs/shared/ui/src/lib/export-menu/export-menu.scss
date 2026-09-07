@@ -1,0 +1,61 @@
+.export-menu {
+  position: relative;
+  display: inline-block;
+}
+
+// El resto del botón lo aporta la primitiva global `.btn`;
+// aquí solo el estado abierto del desplegable.
+.btn.is-open {
+  background: var(--hover);
+}
+
+.export-menu__caret {
+  font-size: var(--icon-sm);
+  color: var(--text-muted);
+  transition: transform 0.18s ease;
+  transform: rotate(90deg);
+}
+
+.btn.is-open .export-menu__caret {
+  transform: rotate(-90deg);
+}
+
+.export-menu__list {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  z-index: 30;
+  min-width: 160px;
+  margin: 0;
+  padding: 0.3rem;
+  list-style: none;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  box-shadow: var(--sh-2);
+
+  button {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    width: 100%;
+    padding: 0.5rem 0.6rem;
+    border: 0;
+    border-radius: var(--r-sm);
+    background: transparent;
+    color: var(--text);
+    font: inherit;
+    font-size: var(--fs-13);
+    text-align: left;
+    cursor: pointer;
+
+    &:hover {
+      background: var(--hover);
+    }
+
+    .erp-icon {
+      font-size: var(--icon-md);
+      color: var(--text-muted);
+    }
+  }
+}

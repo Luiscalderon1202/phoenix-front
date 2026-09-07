@@ -1,0 +1,168 @@
+<div class="personas">
+  <erp-page-header title="Personas" subtitle="Listado de personas registradas." />
+
+  <erp-filter-panel [head]="false">
+    <div class="filter-fields" [formGroup]="filters">
+      <label class="field field--search">
+        <span>Buscar</span>
+        <input
+          type="text"
+          formControlName="q"
+          placeholder="Apellido, razón social, ID, email, teléfono o documento…"
+          (keyup.enter)="onApply()"
+        />
+      </label>
+
+      <label class="field">
+        <span>Nombre</span>
+        <input type="text" formControlName="nombre" (keyup.enter)="onApply()" />
+      </label>
+
+      <label class="field">
+        <span>Apellido materno</span>
+        <input type="text" formControlName="apemat" (keyup.enter)="onApply()" />
+      </label>
+
+      <label class="field">
+        <span>Tipo</span>
+        <select formControlName="tipo">
+          <option value="">Todos</option>
+          @for (t of tipos; track t.value) {
+            <option [value]="t.value">{{ t.label }}</option>
+          }
+        </select>
+      </label>
+
+      <label class="field">
+        <span>Rol</span>
+        <select formControlName="rolid">
+          <option value="">Todos</option>
+          @for (r of roleOptions(); track r.rolid) {
+            <option [value]="r.rolid">{{ r.nombre }}</option>
+          }
+        </select>
+      </label>
+
+      <label class="field">
+        <span>Sexo</span>
+        <select formControlName="sexo">
+          <option value="">Todos</option>
+          @for (s of sexos; track s.value) {
+            <option [value]="s.value">{{ s.label }}</option>
+          }
+        </select>
+      </label>
+
+      <label class="field">
+        <span>Estado</span>
+        <select formControlName="estado">
+          <option value="">Todos</option>
+          <option value="Y">Activos</option>
+          <option value="N">Inactivos</option>
+        </select>
+      </label>
+
+      <label class="field">
+        <span>Foto</span>
+        <select formControlName="con_foto">
+          <option value="">Todas</option>
+          <option value="Y">Con foto</option>
+          <option value="N">Sin foto</option>
+        </select>
+      </label>
+
+      <label class="field">
+        <span>Ordenar por</span>
+        <select formControlName="orderby">
+          <option value="">Por defecto</option>
+          <option value="codigo">Código</option>
+          <option value="nombre">Nombre</option>
+        </select>
+      </label>
+
+      <div class="field field--action">
+        <button type="button" class="btn" (click)="onApply()">
+          <erp-icon name="search" /> Buscar
+        </button>
+      </div>
+    </div>
+
+    <div filterActions>
+      <button type="button" class="btn btn--ghost" (click)="onClear()">
+        <erp-icon name="refresh" /> Limpiar
+      </button>
+      @if (selected().length) {
+        <button type="button" class="btn btn--danger" (click)="onDeleteSelected()">
+          <erp-icon name="trash" /> Eliminar ({{ selected().length }})
+        </button>
+      }
+    </div>
+  </erp-filter-panel>
+
+  @if (error(); as err) {
+    <div class="alert-error alert-error--box">{{ err }}</div>
+  }
+
+  <erp-data-grid
+    [columns]="columns"
+    [rows]="rows()"
+    [loading]="loading()"
+    [selectable]="true"
+    (selectionChange)="onSelectionChange($event)"
+  >
+    <!-- Foto: la imagen y la silueta ocupan la misma caja, así que la fila mide
+         igual haya foto o no y el listado no "salta" al cargar. -->
+    <ng-template [erpCell]="'foto'" let-row>
+      @if (fotoUrl(row); as url) {
+        <span class="avatar">
+          <img
+            class="avatar__img"
+            [src]="url"
+            [alt]="row.nombre_persona"
+            width="32"
+            height="32"
+            loading="lazy"
+            decoding="async"
+            (error)="onFotoError(row)"
+          />
+        </span>
+      } @else {
+        <span class="avatar avatar--vacio">
+          <erp-icon [name]="avatarIcon(row)" />
+        </span>
+      }
+    </ng-template>
+
+    <ng-template [erpCell]="'estado'" let-row>
+      <button
+        type="button"
+        class="badge"
+        [class.badge--on]="row.estado"
+        [class.badge--off]="!row.estado"
+        title="Cambiar estado"
+        (click)="onToggleEstado(row); $event.stopPropagation()"
+      >
+        {{ row.estado ? 'Activo' : 'Inactivo' }}
+      </button>
+    </ng-template>
+
+    <ng-template #rowActions let-row>
+      <button
+        type="button"
+        class="grid-action grid-action--danger"
+        title="Eliminar"
+        (click)="onDelete(row)"
+      >
+        <erp-icon name="trash" />
+      </button>
+    </ng-template>
+
+    <erp-grid-footer
+      gridPagination
+      [meta]="meta()"
+      [pageSizes]="pageSizes"
+      (pageChange)="onPage($event)"
+      (pageSizeChange)="onPageSize($event)"
+    />
+  </erp-data-grid>
+</div>

@@ -1,0 +1,88 @@
+<div class="rt" [class.is-disabled]="disabled()">
+  <div class="rt__toolbar">
+    <button
+      type="button"
+      class="rt__btn"
+      title="Negrita"
+      (mousedown)="$event.preventDefault()"
+      (click)="exec('bold')"
+    >
+      <b>B</b>
+    </button>
+    <button
+      type="button"
+      class="rt__btn"
+      title="Cursiva"
+      (mousedown)="$event.preventDefault()"
+      (click)="exec('italic')"
+    >
+      <i>I</i>
+    </button>
+    <button
+      type="button"
+      class="rt__btn"
+      title="Subrayado"
+      (mousedown)="$event.preventDefault()"
+      (click)="exec('underline')"
+    >
+      <u>U</u>
+    </button>
+
+    <span class="rt__sep"></span>
+
+    <button
+      type="button"
+      class="rt__btn"
+      title="Lista con viñetas"
+      (mousedown)="$event.preventDefault()"
+      (click)="exec('insertUnorderedList')"
+    >
+      •
+    </button>
+    <button
+      type="button"
+      class="rt__btn"
+      title="Lista numerada"
+      (mousedown)="$event.preventDefault()"
+      (click)="exec('insertOrderedList')"
+    >
+      1.
+    </button>
+
+    <span class="rt__sep"></span>
+
+    <button
+      type="button"
+      class="rt__btn"
+      title="Insertar enlace"
+      (mousedown)="$event.preventDefault()"
+      (click)="addLink()"
+    >
+      🔗
+    </button>
+    <button
+      type="button"
+      class="rt__btn"
+      title="Quitar formato"
+      (mousedown)="$event.preventDefault()"
+      (click)="exec('removeFormat')"
+    >
+      ⌫
+    </button>
+  </div>
+
+  <div class="rt__wrap">
+    @if (empty()) {
+      <span class="rt__placeholder">{{ placeholder() }}</span>
+    }
+    <div
+      #editor
+      class="rt__editor"
+      role="textbox"
+      aria-multiline="true"
+      [attr.contenteditable]="!disabled()"
+      (input)="onInput()"
+      (blur)="onBlur()"
+    ></div>
+  </div>
+</div>

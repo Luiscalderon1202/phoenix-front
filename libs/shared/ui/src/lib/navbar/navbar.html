@@ -1,0 +1,31 @@
+<div class="navbar__left">
+  <button
+    type="button"
+    class="iconbtn iconbtn--menu"
+    (click)="toggleSidebar.emit()"
+    aria-label="Alternar menú lateral"
+  >
+    <erp-icon name="menu" />
+  </button>
+
+  <div class="brand">
+    <span class="brand__divider" aria-hidden="true"></span>
+    <img class="brand__logo" src="assets/logo-text-white.svg" alt="Phoenix" />
+    @if (tenantName()) {
+      <span class="brand__tenant">{{ tenantName() }}</span>
+    }
+  </div>
+</div>
+
+<div class="navbar__right">
+  <button type="button" class="iconbtn" (click)="openApps.emit()" aria-label="Aplicaciones">
+    <erp-icon name="apps" />
+  </button>
+  <span class="navbar__sep" aria-hidden="true"></span>
+  <erp-user-menu
+    [userName]="userName()"
+    [userRole]="userRole()"
+    (action)="userAction.emit($event)"
+    (logout)="logout.emit()"
+  />
+</div>

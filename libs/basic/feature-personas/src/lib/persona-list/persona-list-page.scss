@@ -1,0 +1,111 @@
+:host {
+  display: block;
+}
+
+.personas {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+// Fila de filtros: campos en flex que envuelven; "Buscar" se estira para llenar el hueco.
+.filter-fields {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.85rem 1rem;
+}
+
+// Campo genérico del filtro (label arriba, control debajo). El estilo de los controles
+// (input/select, incluido el chevron del select) lo aporta `erp-filter-panel` vía ::ng-deep:
+// NO re-estilamos input/select aquí para no pisar ese `background-image` con el atajo
+// `background`.
+.field {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+
+  > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: var(--fs-12);
+    font-weight: var(--fw-semibold);
+    color: var(--text-muted);
+  }
+}
+
+// Buscar elástico: crece hasta llenar el espacio horizontal libre de la fila.
+.field--search {
+  flex: 1 1 260px;
+  min-width: 0;
+}
+
+// Acción "Buscar": ancho natural, alineada a la base del resto de controles.
+.field--action {
+  flex: 0 0 auto;
+}
+
+.field--action .btn {
+  width: 130px;
+  justify-content: center;
+
+  .erp-icon {
+    font-size: var(--icon-lg);
+  }
+}
+
+// Avatar de la columna foto: la imagen y la silueta comparten caja para que la fila
+// mida lo mismo con o sin foto.
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.avatar--vacio {
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text-muted);
+
+  .erp-icon {
+    font-size: var(--icon-lg);
+  }
+}
+
+.avatar__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover; // recorta al círculo sin deformar
+}
+
+// Escritorio: layout de alto fijo — la grilla ocupa el espacio restante y hace su
+// propio scroll (cabecera sticky), en vez de estirar la página entera.
+@media (min-width: 769px) {
+  :host {
+    height: 100%;
+  }
+
+  .personas {
+    height: 100%;
+  }
+
+  .personas > erp-page-header,
+  .personas > erp-filter-panel,
+  .personas > .alert-error {
+    flex: none;
+  }
+
+  .personas > erp-data-grid {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+}

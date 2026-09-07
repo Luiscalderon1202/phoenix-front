@@ -1,0 +1,4 @@
+// Transparente al layout: cada `.field` se vuelve ítem directo del grid de `erp-filter-panel`.
+:host {
+  display: contents;
+}

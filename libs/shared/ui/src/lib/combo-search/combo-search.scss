@@ -1,0 +1,203 @@
+.combo {
+  position: relative;
+  width: 100%;
+}
+
+// ── Control (apariencia de combobox: etiqueta + chevron) ───────────────
+.combo__control {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  width: 100%;
+  height: var(--control-h);
+  font: inherit;
+  font-size: var(--fs-13);
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-sm);
+  padding: 0 var(--sp-3);
+  cursor: pointer;
+  transition:
+    border-color var(--dur-fast) var(--ease),
+    box-shadow var(--dur-fast) var(--ease);
+
+  &:hover:not(:disabled) {
+    border-color: var(--n-400);
+  }
+  text-align: left;
+
+  &:focus-visible {
+    outline: none;
+    border-color: var(--border-brand);
+    box-shadow: var(--focus-ring);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  &.is-placeholder .combo__value {
+    color: var(--text-dim);
+  }
+}
+
+.combo__value {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.combo__chev {
+  flex: none;
+  font-size: var(--icon-xs);
+  color: var(--text-muted);
+  transform: rotate(90deg);
+  transition: transform var(--dur-base) var(--ease);
+}
+.combo.is-open .combo__chev {
+  transform: rotate(-90deg);
+}
+
+.combo__clear {
+  display: inline-flex;
+  flex: none;
+  color: var(--text-muted);
+  font-size: var(--fs-14);
+  border-radius: var(--r-xs);
+
+  &:hover {
+    color: var(--text);
+  }
+}
+
+// ── Panel desplegable ──────────────────────────────────────────────────
+.combo__panel {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + var(--sp-1));
+  left: 0;
+  right: 0;
+  padding: var(--sp-1);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  box-shadow: var(--sh-2);
+}
+
+.combo__search {
+  // El hueco de la lupa y la posición del icono están ACOPLADOS: si uno cambia
+  // sin el otro, el icono se solapa con el texto. Se derivan de las mismas dos
+  // variables para que no puedan desincronizarse.
+  --combo-icon-x: var(--sp-2); // separación del icono al borde izquierdo
+  --combo-icon-w: 16px; // ancho del glifo
+
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--sp-1);
+}
+
+.combo__search-icon {
+  position: absolute;
+  left: var(--combo-icon-x);
+  font-size: var(--combo-icon-w);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.combo__search-input {
+  width: 100%;
+  height: var(--control-h);
+  font: inherit;
+  font-size: var(--fs-13);
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-sm);
+  // izquierda = margen + glifo + respiro; el resto, espaciado normal.
+  padding: 0 var(--sp-3) 0
+    calc(var(--combo-icon-x) + var(--combo-icon-w) + var(--sp-2));
+
+  &::placeholder {
+    color: var(--text-dim);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--border-brand);
+    box-shadow: var(--focus-ring);
+  }
+}
+
+.combo__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.combo__option {
+  display: block;
+  width: 100%;
+  font: inherit;
+  font-size: var(--fs-13);
+  color: var(--text);
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-radius: var(--r-sm);
+  padding: var(--sp-2) var(--sp-3);
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  &.is-active,
+  &:hover {
+    background: var(--hover);
+  }
+
+  &[aria-selected='true'] {
+    color: var(--brand-800);
+    font-weight: var(--fw-semibold);
+  }
+}
+
+.combo__empty,
+.combo__more {
+  padding: var(--sp-2) var(--sp-3);
+  font-size: var(--fs-12);
+  color: var(--text-muted);
+}
+
+.combo__more {
+  margin-top: var(--sp-1);
+  border-top: 1px solid var(--border);
+}
+
+// ── Responsive ─────────────────────────────────────────────────────────
+// En móvil el panel rinde su propia lista (no es el picker nativo), así que se
+// agrandan control, buscador y opciones para que sean cómodos de leer y tocar.
+@media (max-width: 480px) {
+  .combo__control {
+    font-size: var(--fs-16);
+  }
+
+  .combo__search-input {
+    font-size: var(--fs-16);
+  }
+
+  .combo__option {
+    font-size: var(--fs-16);
+    padding: var(--sp-3);
+  }
+
+  .combo__list {
+    max-height: 280px;
+  }
+}

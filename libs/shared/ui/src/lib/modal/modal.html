@@ -1,0 +1,39 @@
+@if (open()) {
+  <div class="modal-backdrop" (click)="onClose()" aria-hidden="true"></div>
+  <div
+    class="modal"
+    [class.modal--lg]="size() === 'lg'"
+    [class.modal--xl]="size() === 'xl'"
+    [class.modal--max]="maximized()"
+    role="dialog"
+    aria-modal="true"
+  >
+    <header class="modal__head">
+      <h2 class="modal__title">{{ title() }}</h2>
+      <div class="modal__actions">
+        @if (maximizable()) {
+          <button
+            type="button"
+            class="modal__icon-btn"
+            (click)="toggleMaximize()"
+            [attr.aria-label]="maximized() ? 'Restaurar' : 'Maximizar'"
+            [title]="maximized() ? 'Restaurar' : 'Maximizar'"
+          >
+            <erp-icon name="fullscreen" />
+          </button>
+        }
+        <button type="button" class="modal__icon-btn" (click)="onClose()" aria-label="Cerrar">
+          <erp-icon name="close" />
+        </button>
+      </div>
+    </header>
+
+    <div class="modal__body">
+      <ng-content />
+    </div>
+
+    <footer class="modal__foot">
+      <ng-content select="[modalFooter]" />
+    </footer>
+  </div>
+}

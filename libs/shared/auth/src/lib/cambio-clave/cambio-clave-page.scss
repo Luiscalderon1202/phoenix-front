@@ -1,0 +1,20 @@
+// Reutiliza la hoja del login: es la misma situación (pantalla completa, sin
+// navegación, tarjeta centrada) y duplicar el diseño solo lo haría divergir.
+@use '../login/login-page.scss';
+
+// Único añadido: la casilla de "mostrar contraseñas", que el login no tiene
+// porque allí basta el ojo de un solo campo.
+.mostrar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: -4px 0 4px;
+  color: #5a6b7d;
+  font-size: 13px;
+  cursor: pointer;
+
+  input {
+    width: 16px;
+    height: 16px;
+  }
+}

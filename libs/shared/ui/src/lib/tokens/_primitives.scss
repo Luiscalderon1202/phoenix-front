@@ -1,0 +1,321 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// PRIMITIVAS — clases base compartidas por toda la app (botones, campos,
+// badges, alertas). Se importan UNA sola vez desde apps/erp/src/styles.scss,
+// así que son GLOBALES (sin encapsular) y aplican dentro de cualquier
+// componente sin necesidad de ::ng-deep.
+//
+// Antes esto no existía: 43 archivos repetían el mismo bloque `.btn`, 46 el
+// mismo `.badge--on/--off` y 47 el mismo `.alert-error`. Cualquier ajuste
+// implicaba tocar decenas de ficheros y en la práctica divergían.
+//
+// Precedencia: los estilos de componente llevan atributo de encapsulado
+// (`.btn[_ngcontent-x]`), así que GANAN a estas reglas. Una página que necesite
+// una variante propia solo tiene que redeclarar lo que cambia — no el bloque
+// entero.
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ── Botones ─────────────────────────────────────────────────────────────────
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  height: var(--control-h);
+  padding: 0 var(--sp-4);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: var(--fs-13);
+  font-weight: var(--fw-medium);
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease);
+
+  &:hover:not(:disabled) {
+    background: var(--hover);
+    border-color: var(--n-400);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  .erp-icon {
+    font-size: var(--icon-md);
+  }
+}
+
+.btn--primary {
+  border-color: var(--brand-800);
+  background: var(--brand-800);
+  color: var(--text-on-brand);
+  box-shadow: var(--sh-1);
+
+  &:hover:not(:disabled) {
+    background: var(--brand-900);
+    border-color: var(--brand-900);
+  }
+}
+
+.btn--danger {
+  border-color: var(--danger-br);
+  background: var(--surface);
+  color: var(--danger-fg);
+
+  &:hover:not(:disabled) {
+    background: var(--danger-bg);
+    border-color: var(--danger-solid);
+  }
+
+  &:focus-visible {
+    box-shadow: var(--focus-ring-danger);
+  }
+}
+
+// Sin borde ni fondo: acciones terciarias (cancelar, cerrar, "ver más").
+.btn--ghost {
+  border-color: transparent;
+  background: transparent;
+  color: var(--text-muted);
+
+  &:hover:not(:disabled) {
+    background: var(--hover);
+    border-color: transparent;
+    color: var(--text);
+  }
+}
+
+.btn--sm {
+  height: var(--control-h-sm);
+  padding: 0 var(--sp-3);
+  font-size: var(--fs-12);
+
+  .erp-icon {
+    font-size: var(--icon-sm);
+  }
+}
+
+// Botón de solo icono (cuadrado, sin padding lateral).
+.iconbtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--control-h);
+  height: var(--control-h);
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: var(--icon-lg);
+  cursor: pointer;
+  transition:
+    background var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease);
+
+  &:hover:not(:disabled) {
+    background: var(--hover);
+    color: var(--text);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+  }
+
+  &.is-active {
+    background: var(--active);
+    color: var(--active-text);
+  }
+}
+
+// ── Campos de formulario ────────────────────────────────────────────────────
+// `.field` es solo la columna etiqueta+control. La COLOCACIÓN (grid-column,
+// anchos f-2/f-4/…) la decide el contenedor, p.ej. erp-filter-panel.
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  min-width: 0;
+
+  > label,
+  > span {
+    font-size: var(--fs-12);
+    font-weight: var(--fw-medium);
+    color: var(--text-secondary);
+  }
+
+  .req {
+    margin-left: 2px;
+    color: var(--danger-solid);
+  }
+
+  // OJO: hijo DIRECTO (`>`), no descendiente. Un selector descendiente se cuela
+  // dentro de componentes anidados que traen su propio control —`erp-combo-search`,
+  // `erp-rich-text`— y les pisa el padding/alto. Además `.field input` (0,3,1) gana
+  // al estilo encapsulado del componente (0,2,0), así que el pisotón es silencioso.
+  // Un `.field` estiliza SU control, no el de sus hijos.
+  > input:not([type='checkbox']):not([type='radio']),
+  > select,
+  > textarea {
+    width: 100%;
+    padding: 0 var(--sp-3);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--r-sm);
+    background: var(--surface);
+    color: var(--text);
+    font: inherit;
+    font-size: var(--fs-13);
+    transition:
+      border-color var(--dur-fast) var(--ease),
+      box-shadow var(--dur-fast) var(--ease);
+
+    &::placeholder {
+      color: var(--text-dim);
+    }
+
+    &:hover:not(:disabled):not(:read-only) {
+      border-color: var(--n-400);
+    }
+
+    &:focus {
+      outline: none;
+      border-color: var(--border-brand);
+      box-shadow: var(--focus-ring);
+    }
+
+    &:disabled,
+    &[readonly] {
+      background: var(--surface-sunken);
+      color: var(--text-muted);
+      cursor: not-allowed;
+    }
+
+    &.is-invalid {
+      border-color: var(--danger-solid);
+
+      &:focus {
+        box-shadow: var(--focus-ring-danger);
+      }
+    }
+  }
+
+  > input:not([type='checkbox']):not([type='radio']),
+  > select {
+    height: var(--control-h);
+  }
+
+  > textarea {
+    padding: var(--sp-2) var(--sp-3);
+    line-height: var(--lh-base);
+    resize: vertical;
+  }
+
+  // Chevron embebido: no dependemos de la apariencia nativa del select.
+  // (Los selects envueltos en `.select-wrap` traen su propio chevron: por eso
+  // esta regla NO debe alcanzarlos, otro motivo para el hijo directo.)
+  > select {
+    appearance: none;
+    padding-right: var(--sp-8);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7689' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right var(--sp-3) center;
+    background-size: 16px;
+  }
+}
+
+// ── Badges de estado ────────────────────────────────────────────────────────
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  padding: 2px var(--sp-2);
+  border: 0;
+  border-radius: var(--r-full);
+  font: inherit;
+  font-size: var(--fs-11);
+  font-weight: var(--fw-semibold);
+  line-height: 1.5;
+  white-space: nowrap;
+
+  // Punto de color: hereda el color del texto de la variante.
+  &::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+}
+
+// Interactivo (toggle de estado por click): solo entonces cambia el cursor.
+button.badge {
+  cursor: pointer;
+  transition: filter var(--dur-fast) var(--ease);
+
+  &:hover {
+    filter: brightness(0.96);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+  }
+}
+
+.badge--on,
+.badge--success {
+  background: var(--success-bg);
+  color: var(--success-fg);
+}
+
+.badge--off,
+.badge--neutral {
+  background: var(--neutral-bg);
+  color: var(--neutral-fg);
+}
+
+.badge--danger {
+  background: var(--danger-bg);
+  color: var(--danger-fg);
+}
+
+.badge--warn {
+  background: var(--warn-bg);
+  color: var(--warn-fg);
+}
+
+.badge--info {
+  background: var(--info-bg);
+  color: var(--info-fg);
+}
+
+// Badge sin punto (para conteos/etiquetas neutras).
+.badge--plain::before {
+  content: none;
+}
+
+// ── Alertas ─────────────────────────────────────────────────────────────────
+.alert-error {
+  margin: var(--sp-1) 0;
+  color: var(--danger-fg);
+  font-size: var(--fs-13);
+}
+
+// Variante en caja (cuando el error necesita más peso que una línea de texto).
+.alert-error--box {
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--danger-br);
+  border-radius: var(--r-sm);
+  background: var(--danger-bg);
+}

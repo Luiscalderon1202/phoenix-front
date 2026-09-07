@@ -1,0 +1,110 @@
+:host {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  height: var(--navbar-h);
+  padding: 0 var(--sp-4);
+  // Degradado sutil en la marca: da volumen a la barra sin añadir bordes.
+  background: linear-gradient(
+    180deg,
+    var(--brand-800) 0%,
+    var(--brand-900) 100%
+  );
+  color: var(--text-on-brand);
+  // OJO: sin overflow aquí — recortaría el menú desplegable del avatar (se abre bajo la barra).
+}
+
+.navbar__left,
+.navbar__right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0; // permite que el contenido (p. ej. el tenant) se encoja en vez de desbordar
+}
+
+.navbar__right {
+  flex: none; // los íconos/avatar siempre visibles; el que cede espacio es el lado izquierdo
+}
+
+.iconbtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--text-on-brand);
+  font-size: var(--fs-20);
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease);
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.7);
+    outline-offset: -2px;
+  }
+}
+
+.iconbtn--menu {
+  // Fuera de la escala de iconos a propósito: la hamburguesa es el único
+  // glifo de este tamaño en la app y anclarla a --icon-xl la encogería un 31%.
+  font-size: 35px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.brand__divider {
+  width: 3px;
+  height: 39px;
+  border-radius: 2px;
+  background: var(--accent-500);
+}
+
+.brand__logo {
+  height: 45px;
+  width: auto;
+  display: block;
+}
+
+.brand__tenant {
+  padding-left: 0.75rem;
+  margin-left: 0.25rem;
+  border-left: 1px solid rgba(255, 255, 255, 0.2);
+  font-size: var(--fs-13);
+  font-weight: var(--fw-medium);
+  letter-spacing: 0.01em;
+  color: rgba(255, 255, 255, 0.82);
+  height: 39px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.navbar__sep {
+  width: 1px;
+  height: 28px;
+  background: rgba(255, 255, 255, 0.2);
+  margin: 0 0.25rem;
+}
+
+// En móvil se oculta el logo (y su divisor) para dejar espacio; queda el ☰ + tenant.
+@media (max-width: 768px) {
+  .brand__logo,
+  .brand__divider {
+    display: none;
+  }
+}

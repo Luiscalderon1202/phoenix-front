@@ -1,0 +1,38 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "rootDir": ".",
+    "sourceMap": true,
+    "declaration": false,
+    "moduleResolution": "node",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "target": "es2015",
+    "module": "esnext",
+    "lib": ["es2020", "dom"],
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "paths": {
+      "@phoenix/shared/util": ["./libs/shared/util/src/index.ts"],
+      "@phoenix/shared/api": ["./libs/shared/api/src/index.ts"],
+      "@phoenix/shared/api-client": ["./libs/shared/api-client/src/index.ts"],
+      "@phoenix/shared/domain": ["./libs/shared/domain/src/index.ts"],
+      "@phoenix/shared/http": ["./libs/shared/http/src/index.ts"],
+      "@phoenix/shared/auth": ["./libs/shared/auth/src/index.ts"],
+      "@phoenix/shared/ui": ["./libs/shared/ui/src/index.ts"],
+      "@phoenix/shared/ui/chrome": ["./libs/shared/ui/src/chrome.ts"],
+      "@phoenix/basic/domain": ["./libs/basic/domain/src/index.ts"],
+      "@phoenix/basic/data-access": ["./libs/basic/data-access/src/index.ts"],
+      "@phoenix/basic/feature-personas": [
+        "./libs/basic/feature-personas/src/index.ts"
+      ]
+    },
+    "strict": false,
+    "noUncheckedSideEffectImports": false,
+    "types": ["*"],
+    "esModuleInterop": false,
+    "ignoreDeprecations": "6.0"
+  },
+  "exclude": ["node_modules", "tmp"]
+}

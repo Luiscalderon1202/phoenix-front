@@ -1,0 +1,90 @@
+<div class="login">
+  <img class="login__bg" src="assets/login-bg.svg" alt="" aria-hidden="true" />
+  <div class="login__veil" aria-hidden="true"></div>
+
+  <div class="login__card">
+    <header class="brand">
+      <span class="brand__emblem" aria-hidden="true">
+        <img src="assets/logo-mark.svg" alt="" />
+      </span>
+      <h1 class="brand__title">
+        {{ obligatorio() ? 'Cambie su contraseña' : 'Cambiar contraseña' }}
+      </h1>
+      <p class="brand__subtitle">
+        @if (obligatorio()) { Está usando una contraseña temporal. Defina una
+        propia para continuar. } @else { Defina una contraseña nueva para su
+        cuenta. }
+      </p>
+    </header>
+
+    @if (error(); as err) {
+    <div class="alert" role="alert">{{ err }}</div>
+    }
+
+    <form class="form" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+      <div class="field">
+        <label class="field__label" for="clave-actual">Contraseña actual</label>
+        <input
+          id="clave-actual"
+          class="field__input"
+          [type]="mostrar() ? 'text' : 'password'"
+          formControlName="claveActual"
+          autocomplete="current-password"
+          [class.is-invalid]="
+            form.controls.claveActual.touched && form.controls.claveActual.invalid
+          "
+        />
+        @if (form.controls.claveActual.touched && form.controls.claveActual.invalid)
+        {
+        <span class="field__error">Ingrese su contraseña actual.</span>
+        }
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="clave-nueva">Contraseña nueva</label>
+        <input
+          id="clave-nueva"
+          class="field__input"
+          [type]="mostrar() ? 'text' : 'password'"
+          formControlName="claveNueva"
+          autocomplete="new-password"
+          [class.is-invalid]="
+            form.controls.claveNueva.touched && form.controls.claveNueva.invalid
+          "
+        />
+        @if (form.controls.claveNueva.touched && form.controls.claveNueva.invalid)
+        {
+        <span class="field__error">Use al menos 8 caracteres.</span>
+        }
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="clave-repetir">Repita la nueva</label>
+        <input
+          id="clave-repetir"
+          class="field__input"
+          [type]="mostrar() ? 'text' : 'password'"
+          formControlName="repetir"
+          autocomplete="new-password"
+          [class.is-invalid]="noCoincide"
+        />
+        @if (noCoincide) {
+        <span class="field__error">Las contraseñas no coinciden.</span>
+        }
+      </div>
+
+      <label class="mostrar">
+        <input
+          type="checkbox"
+          [checked]="mostrar()"
+          (change)="toggleMostrar()"
+        />
+        <span>Mostrar contraseñas</span>
+      </label>
+
+      <button class="btn btn--primary" type="submit" [disabled]="submitting()">
+        {{ submitting() ? 'Guardando…' : 'Cambiar contraseña' }}
+      </button>
+    </form>
+  </div>
+</div>

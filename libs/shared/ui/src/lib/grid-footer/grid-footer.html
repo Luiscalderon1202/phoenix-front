@@ -1,0 +1,69 @@
+<div class="grid-foot">
+  <span class="grid-foot__info">
+    @if (range().total > 0) {
+      Mostrando {{ range().from }}–{{ range().to }} de {{ range().total }}
+    } @else {
+      Sin registros
+    }
+  </span>
+
+  <label class="grid-foot__size">
+    <span>Filas por página</span>
+    <select
+      [value]="meta().pageSize"
+      (change)="pageSizeChange.emit(+$any($event.target).value)"
+    >
+      <!-- `[selected]` además de `[value]`: en el primer render el binding del
+           select corre ANTES de que @for cree las opciones, así que el navegador
+           lo ignora y deja marcada la primera. Aquí lo marca la propia opción. -->
+      @for (size of pageSizes(); track size) {
+        <option [value]="size" [selected]="size === meta().pageSize">
+          {{ size <= 0 ? 'Todas' : size }}
+        </option>
+      }
+    </select>
+  </label>
+
+  <nav class="pager" aria-label="Paginación">
+    <button type="button" class="pager__btn" [disabled]="!canPrev()" title="Primera" (click)="go(1)">
+      «
+    </button>
+    <button type="button" class="pager__btn" [disabled]="!canPrev()" title="Anterior" (click)="prev()">
+      ‹
+    </button>
+
+    @for (item of pages(); track $index) {
+      @if (isGap(item)) {
+        <span class="pager__gap">…</span>
+      } @else {
+        <button
+          type="button"
+          class="pager__btn"
+          [class.is-active]="item === meta().page"
+          (click)="go($any(item))"
+        >
+          {{ item }}
+        </button>
+      }
+    }
+
+    <button
+      type="button"
+      class="pager__btn"
+      [disabled]="!canNext()"
+      title="Siguiente"
+      (click)="next()"
+    >
+      ›
+    </button>
+    <button
+      type="button"
+      class="pager__btn"
+      [disabled]="!canNext()"
+      title="Última"
+      (click)="go(meta().totalPages)"
+    >
+      »
+    </button>
+  </nav>
+</div>

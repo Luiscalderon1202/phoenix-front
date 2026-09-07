@@ -1,0 +1,100 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.grid-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--sp-3) var(--sp-4);
+  padding: var(--sp-2) var(--sp-3);
+  border-top: 1px solid var(--border-subtle);
+  // Hundido, igual que la cabecera de la tabla: encierra la grilla por arriba
+  // y por abajo con el mismo tono y da simetría al bloque.
+  background: var(--surface-sunken);
+  font-size: var(--fs-12);
+  color: var(--text-muted);
+}
+
+.grid-foot__info {
+  font-variant-numeric: tabular-nums;
+}
+
+.grid-foot__size {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-left: auto;
+
+  select {
+    height: var(--control-h-sm);
+    padding: 0 var(--sp-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--r-sm);
+    background: var(--surface);
+    color: var(--text);
+    font: inherit;
+    font-size: var(--fs-12);
+    cursor: pointer;
+
+    &:focus {
+      outline: none;
+      border-color: var(--border-brand);
+      box-shadow: var(--focus-ring);
+    }
+  }
+}
+
+.pager {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+}
+
+.pager__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--control-h-sm);
+  height: var(--control-h-sm);
+  padding: 0 var(--sp-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: var(--fs-12);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition:
+    background var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease);
+
+  &:hover:not(:disabled):not(.is-active) {
+    background: var(--hover);
+    border-color: var(--n-400);
+  }
+
+  &:focus-visible {
+    box-shadow: var(--focus-ring);
+  }
+
+  &.is-active {
+    border-color: var(--brand-800);
+    background: var(--brand-800);
+    color: var(--text-on-brand);
+    font-weight: var(--fw-semibold);
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+}
+
+.pager__gap {
+  padding: 0 var(--sp-1);
+  color: var(--text-dim);
+}

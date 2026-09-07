@@ -1,0 +1,31 @@
+<div class="app" [class.is-collapsed]="collapsed()" [class.is-mobile-open]="mobileNavOpen()">
+  <erp-navbar
+    class="app__navbar"
+    [userName]="user()?.nombre ?? ''"
+    [userRole]="user()?.roles?.[0] ?? ''"
+    [tenantName]="tenant()?.tenantName ?? ''"
+    (toggleSidebar)="onToggleSidebar()"
+    (logout)="onLogout()"
+  />
+
+  <erp-sidebar
+    class="app__sidebar"
+    [nodes]="navNodes()"
+    [activeRoute]="activeRoute()"
+    [collapsed]="collapsed()"
+  />
+
+  <main class="app__main">
+    <div class="app__content">
+      <router-outlet />
+    </div>
+  </main>
+
+  @if (mobileNavOpen()) {
+    <div class="app__backdrop" (click)="closeMobileNav()" aria-hidden="true"></div>
+  }
+</div>
+
+<!-- Outlets globales de feedback (una sola instancia para toda la app). -->
+<erp-toaster />
+<erp-confirm-dialog />

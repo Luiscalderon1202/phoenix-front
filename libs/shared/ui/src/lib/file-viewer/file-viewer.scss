@@ -1,0 +1,34 @@
+:host {
+  display: contents;
+}
+
+.fv__img {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  margin: 0 auto;
+  object-fit: contain;
+}
+
+.fv__pdf {
+  width: 100%;
+  height: 100%;
+  min-height: 70vh;
+  border: 0;
+}
+
+.fv__fallback {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 2rem;
+  color: var(--text-muted);
+  text-align: center;
+
+  .erp-icon {
+    // Ilustración de estado vacío, no un icono de control: fuera de escala a propósito.
+    font-size: 40px;
+  }
+}

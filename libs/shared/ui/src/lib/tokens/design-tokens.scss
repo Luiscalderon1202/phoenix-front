@@ -1,0 +1,223 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// DESIGN TOKENS — única fuente de verdad de color, tipografía, espacio y
+// elevación. Se importa UNA sola vez desde apps/erp/src/styles.scss.
+//
+// Reglas:
+//   · Los componentes consumen SIEMPRE var(--token); nunca literales de color.
+//   · Las escalas (--n-*, --sp-*, --fs-*) son primitivas: no significan nada.
+//   · Los tokens semánticos (--surface, --danger-fg, …) sí tienen significado y
+//     son los que deben usar los componentes. Cambiar tema = remapear semánticos.
+//   · Los alias LEGACY al final mantienen vivo el código anterior; son la lista
+//     de pendientes de migración, no API nueva.
+//
+// Sin @layer a propósito: no hay tema de terceros con el que competir, y
+// mantenerlo fuera de capas evita sorpresas de especificidad si algún día lo hay.
+// ─────────────────────────────────────────────────────────────────────────────
+:root {
+  color-scheme: light;
+
+  // ── Tipografía ────────────────────────────────────────────────────────────
+  // Inter variable: métricas casi idénticas a Open Sans (no rompe layouts),
+  // pero con cifras tabulares reales y eje óptico — clave en pantallas densas.
+  --font-sans:
+    'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    'Helvetica Neue', sans-serif;
+  --font-mono:
+    'JetBrains Mono', ui-monospace, 'SFMono-Regular', 'Menlo', monospace;
+
+  // Escala entera. SIN decimales: un half-pixel cae en subpíxel en pantallas 1x
+  // y es la causa directa del aspecto "borroso"/impreso.
+  --fs-11: 11px; // metadatos, pies de tabla
+  --fs-12: 12px; // etiquetas de campo, encabezados de columna
+  --fs-13: 13px; // celdas, inputs, botones
+  --fs-14: 14px; // cuerpo por defecto (400 / 1.5)
+  --fs-16: 16px; // títulos de sección / modal
+  --fs-20: 20px; // marca en navbar
+  --fs-24: 24px; // título de página (h1, 600 / 1.25) y cifras destacadas
+  --fs-32: 32px; // KPI grande
+
+  // Escala de ICONOS. Eje aparte del texto: un icono no escala con el cuerpo,
+  // escala con el control que lo contiene. Antes no existía y el mismo botón
+  // salía a 15, 16, 17 o 18px según la página.
+  // Regla: control de --control-h-sm → --icon-md; control de --control-h → --icon-lg.
+  --icon-xs: 12px; // chevrons de combo, iconos dentro de pills
+  --icon-sm: 14px; // en línea junto a texto
+  --icon-md: 16px; // botones de control pequeño
+  --icon-lg: 18px; // botones de control estándar (el tamaño dominante)
+  --icon-xl: 24px; // acciones destacadas, tiles
+
+  --lh-tight: 1.25; // títulos
+  --lh-snug: 1.35; // celdas de tabla
+  --lh-base: 1.5; // texto corrido
+
+  --fw-light: 300;
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+  --fw-extrabold: 800;
+
+  // El tracking negativo solo se aplica a ≥16px; por debajo empeora la lectura.
+  --tracking-tight: -0.011em;
+  --tracking-caps: 0.04em; // encabezados en mayúsculas
+
+  // ── Neutrales ─────────────────────────────────────────────────────────────
+  // Rampa fría única (hue ~217). Antes había 3 grises sueltos de hues distintos,
+  // que es lo que hacía que las superficies "no rimaran" entre sí.
+  --n-0: #ffffff;
+  --n-25: #fbfcfd;
+  --n-50: #f6f8fa;
+  --n-100: #eef1f5;
+  --n-200: #e2e7ee;
+  --n-300: #cdd5e0;
+  --n-400: #9aa5b7;
+  --n-500: #6b7689;
+  --n-600: #566072;
+  --n-700: #3d4757;
+  --n-800: #2b3444;
+  --n-900: #1f2a3a;
+
+  // ── Marca ─────────────────────────────────────────────────────────────────
+  --brand-900: #0b2845;
+  --brand-800: #0f3460;
+  --brand-700: #143a6b;
+  --brand-600: #1c4a86;
+  --brand-100: #d7e4f6;
+  --brand-50: #eaf1fb;
+
+  --accent-600: #c98f00;
+  --accent-500: #f5b400;
+  --accent-100: #fdf0cc;
+  --accent-50: #fff9e8;
+
+  // ── Semánticos de estado (triada bg / fg / border) ────────────────────────
+  // Sustituyen a los literales #d33, #16a34a, rgba(211,51,51,…) repartidos por
+  // el código. Un badge/alerta solo necesita estas tres variables.
+  --success-bg: #ecfdf3;
+  --success-fg: #067647;
+  --success-br: #abefc6;
+  --success-solid: #16a34a;
+
+  --danger-bg: #fef3f2;
+  --danger-fg: #b42318;
+  --danger-br: #fecdca;
+  --danger-solid: #d92d20;
+
+  --warn-bg: #fffaeb;
+  --warn-fg: #b54708;
+  --warn-br: #fedf89;
+  --warn-solid: #f79009;
+
+  --info-bg: #eff8ff;
+  --info-fg: #175cd3;
+  --info-br: #b2ddff;
+  --info-solid: #2e90fa;
+
+  // Estado "neutro"/inactivo (badges apagados, chips sin énfasis).
+  --neutral-bg: var(--n-100);
+  --neutral-fg: var(--n-500);
+  --neutral-br: var(--n-200);
+
+  // Variantes para texto SOBRE fondo de marca oscuro (cabeceras navy de los
+  // estados financieros): los -fg normales no contrastan ahí.
+  --success-on-dark: var(--success-on-dark);
+  --danger-on-dark: var(--danger-on-dark);
+
+  // Velo de modales y drawers.
+  --overlay: rgba(11, 40, 69, 0.45);
+
+  // ── Superficies y texto (semánticos) ──────────────────────────────────────
+  --bg: var(--n-50); // lienzo de la app
+  --surface: var(--n-0); // tarjetas, paneles, modales
+  --surface-sunken: var(--n-50); // cabeceras de tabla, zonas hundidas
+  --surface-raised: var(--n-0);
+  --surface-alt: var(--n-25); // filas alternas
+
+  --text: var(--n-900);
+  --text-secondary: var(--n-700);
+  --text-muted: var(--n-500);
+  --text-dim: var(--n-400);
+  --text-on-brand: #ffffff;
+
+  --border-subtle: var(--n-100); // separadores internos (filas)
+  --border: var(--n-200); // borde por defecto de superficies
+  --border-strong: var(--n-300); // controles de formulario
+  --border-brand: var(--brand-600);
+
+  --hover: var(--n-100);
+  --active: var(--brand-50);
+  --active-text: var(--brand-800);
+  --selected: var(--brand-50);
+
+  // ── Espaciado (base 4px) ──────────────────────────────────────────────────
+  // Reemplaza las ~85 combinaciones ad-hoc de padding (0.35/0.6/0.65/0.85/1.1rem).
+  --sp-0: 0;
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --sp-10: 40px;
+  --sp-12: 48px;
+
+  // ── Radios ────────────────────────────────────────────────────────────────
+  // Escalonados: un radio único para chip, tarjeta y modal aplana la jerarquía.
+  --r-xs: 4px; // checkbox, badges cuadrados
+  --r-sm: 6px; // botones, inputs, celdas de acción
+  --r-md: 10px; // tarjetas, paneles, grilla
+  --r-lg: 14px; // modales, hojas
+  --r-full: 999px; // pills
+
+  // ── Elevación ─────────────────────────────────────────────────────────────
+  // Dos capas (ambient + key). Una sombra plana a 0.06 alpha es invisible y deja
+  // todo al mismo nivel visual — el efecto "documento".
+  --sh-1: 0 1px 2px rgba(16, 24, 40, 0.05), 0 1px 3px rgba(16, 24, 40, 0.1);
+  --sh-2: 0 2px 4px rgba(16, 24, 40, 0.04), 0 4px 12px rgba(16, 24, 40, 0.08);
+  --sh-3: 0 8px 24px rgba(16, 24, 40, 0.1), 0 2px 6px rgba(16, 24, 40, 0.06);
+  --sh-overlay:
+    0 20px 48px rgba(11, 40, 69, 0.18), 0 4px 12px rgba(11, 40, 69, 0.1);
+
+  // Hairline por inset-shadow: no ocupa layout (no desplaza el contenido como
+  // haría un border) y en pantallas 2x se lee más fino que un border 1px.
+  --hairline: inset 0 0 0 1px var(--border);
+
+  --focus-ring: 0 0 0 3px rgba(28, 74, 134, 0.18);
+  --focus-ring-danger: 0 0 0 3px rgba(217, 45, 32, 0.18);
+
+  // ── Movimiento ────────────────────────────────────────────────────────────
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+  --dur-fast: 120ms;
+  --dur-base: 160ms;
+  --dur-slow: 240ms;
+
+  // ── Métricas del shell ────────────────────────────────────────────────────
+  --navbar-h: 70px;
+  --sidebar-w: 258px;
+
+  // Margen del area de contenido. En escritorio 24px: con --sp-3 (12px) el
+  // contenido quedaba pegado al borde del shell y las tarjetas no respiraban.
+  // En movil baja a 16px, donde 24px se come demasiado ancho util.
+  --content-gutter: var(--sp-6);
+
+  // ── Densidad de controles ─────────────────────────────────────────────────
+  --control-h: 36px;
+  --control-h-sm: 30px;
+}
+
+// Hasta 768px el gutter baja a 16px: el ancho util manda sobre el aire.
+@media (max-width: 768px) {
+  :root {
+    --content-gutter: var(--sp-4);
+  }
+}
+
+// Respeta la preferencia del sistema de reducir animación.
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 0ms;
+    --dur-base: 0ms;
+    --dur-slow: 0ms;
+  }
+}

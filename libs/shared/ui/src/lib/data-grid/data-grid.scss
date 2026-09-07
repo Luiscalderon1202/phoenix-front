@@ -1,0 +1,651 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// DATA GRID — tabla nativa, sin motor de terceros.
+//
+// El aspecto NO se define contra clases de una librería, sino contra un CONTRATO
+// de custom properties (--grid-*) declarado en :host, que el bloque de tabla de
+// más abajo consume. La separación se mantiene por lo que vale por sí sola:
+// el chrome (toolbar, buscador, footer) y el skin se tocan por separado.
+//
+// Los únicos ::ng-deep que quedan son para CONTENIDO PROYECTADO por las páginas
+// (#rowActions, #gridFooter, plantillas [erpCell]): esos nodos llevan el atributo
+// de encapsulado de la página, no el nuestro. Van rotulados en su propio bloque.
+// ─────────────────────────────────────────────────────────────────────────────
+:host {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+
+  // ── CONTRATO DEL SKIN ─────────────────────────────────────────────────────
+  // Lo único que un motor de tabla necesita saber para verse como el resto de
+  // la app. Cualquier adaptador (PrimeNG hoy, AG Grid mañana) consume esto.
+  --grid-bg: var(--surface);
+  --grid-radius: var(--r-md);
+
+  --grid-header-bg: var(--surface-sunken);
+  --grid-header-fg: var(--text-muted);
+  --grid-header-fs: var(--fs-11);
+  --grid-header-fw: var(--fw-semibold);
+  --grid-header-tracking: var(--tracking-caps);
+  --grid-header-border: var(--border-strong);
+
+  --grid-row-fg: var(--text);
+  --grid-row-fs: var(--fs-13);
+  --grid-row-border: var(--border-subtle);
+  --grid-row-hover: var(--hover);
+  --grid-row-selected: var(--selected);
+  --grid-row-alt: var(--surface-alt);
+
+  --grid-cell-px: var(--sp-4);
+  --grid-cell-py: var(--sp-3);
+  --grid-cell-py-compact: var(--sp-2);
+}
+
+.grid-block {
+  position: relative; // ancla del erp-loading-overlay (cubre toda la grilla)
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto; // llena el host (cadena flex → la tabla puede scrollear dentro)
+  min-height: 0;
+  min-width: 0;
+  background: var(--grid-bg);
+  // Hairline por inset-shadow + elevación de 2 capas: la grilla flota sobre el
+  // lienzo en vez de ser un recuadro impreso.
+  border-radius: var(--grid-radius);
+  box-shadow: var(--hairline), var(--sh-1);
+  overflow: hidden;
+}
+
+// ── Toolbar (chrome propio, independiente del motor) ────────────────────────
+.grid-toolbar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.grid-search {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex: 1 1 320px;
+  max-width: 360px;
+  height: var(--control-h);
+  padding: 0 var(--sp-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--text-muted);
+  transition:
+    border-color var(--dur-fast) var(--ease),
+    box-shadow var(--dur-fast) var(--ease);
+
+  &:hover {
+    border-color: var(--n-400);
+  }
+
+  &:focus-within {
+    border-color: var(--border-brand);
+    box-shadow: var(--focus-ring);
+  }
+
+  .erp-icon {
+    font-size: var(--icon-md);
+  }
+
+  input {
+    flex: 1 1 auto;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    color: var(--text);
+    font: inherit;
+    font-size: var(--fs-13);
+
+    &::placeholder {
+      color: var(--text-dim);
+    }
+
+    &:focus {
+      outline: none;
+    }
+  }
+}
+
+.grid-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+}
+
+.iconbtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--control-h);
+  height: var(--control-h);
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: var(--icon-lg);
+  cursor: pointer;
+  transition:
+    background var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease);
+
+  &:hover {
+    background: var(--hover);
+    color: var(--text);
+  }
+
+  &:focus-visible {
+    box-shadow: var(--focus-ring);
+  }
+
+  &.is-active {
+    background: var(--active);
+    color: var(--active-text);
+  }
+}
+
+// `.tablewrap` da altura al motor de tabla; el scroll lo hace el motor por dentro.
+.tablewrap {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  overflow: hidden;
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// TABLA — DOM propio (`<table>` nativo), sin motor de terceros.
+// Consume el contrato --grid-* de arriba. Ya no hay bloque "adaptador": lo que
+// antes traducía clases .p-datatable-* ahora estila directamente nuestro markup.
+// ═════════════════════════════════════════════════════════════════════════════
+
+// `.tablewrap` es la caja de scroll (antes lo era el contenedor interno de p-table).
+.tablewrap {
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--n-300) transparent;
+}
+
+.dt {
+  width: 100%;
+  // `separate` (no `collapse`): con bordes colapsados, los de las celdas sticky
+  // se quedan atrás al scrollear. Los bordes van por celda.
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: var(--grid-row-fs);
+  line-height: var(--lh-snug);
+}
+
+// ── Encabezado (fijo al scrollear) ──────────────────────────────────────────
+.dt thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: var(--grid-cell-py) var(--grid-cell-px);
+  background: var(--grid-header-bg);
+  border-bottom: 1px solid var(--grid-header-border);
+  color: var(--grid-header-fg);
+  font-weight: var(--grid-header-fw);
+  font-size: var(--grid-header-fs);
+  text-transform: uppercase;
+  letter-spacing: var(--grid-header-tracking);
+  text-align: left;
+  white-space: nowrap;
+}
+
+// Encabezado ordenable: es un <button> real (teclado y foco), pintado como texto.
+.dt thead th .sort {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--text-secondary);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+    border-radius: var(--r-xs);
+  }
+
+  .erp-icon {
+    font-size: var(--icon-sm);
+    color: var(--text-dim);
+  }
+
+  // Columna activa: el chevron apunta al sentido y toma el color de marca.
+  .sort-dir {
+    color: var(--brand-600);
+    transform: rotate(-90deg);
+
+    &.is-desc {
+      transform: rotate(90deg);
+    }
+  }
+}
+
+// ── Celdas ──────────────────────────────────────────────────────────────────
+.dt tbody td {
+  padding: var(--grid-cell-py) var(--grid-cell-px);
+  border-bottom: 1px solid var(--grid-row-border);
+  color: var(--grid-row-fg);
+  vertical-align: middle;
+}
+
+.dt tbody tr {
+  background: var(--grid-bg);
+  transition: background var(--dur-fast) var(--ease);
+  cursor: pointer;
+
+  // Filas alternas: en tablas anchas es lo que evita perder el renglón.
+  &:nth-child(even) {
+    background: var(--grid-row-alt);
+  }
+
+  &:hover {
+    background: var(--grid-row-hover);
+  }
+
+  &.is-selected {
+    background: var(--grid-row-selected);
+    box-shadow: inset 2px 0 0 var(--brand-600);
+  }
+
+  // Guía de destino mientras se arrastra una fila.
+  &.is-drop-target td {
+    border-bottom-color: var(--brand-600);
+    box-shadow: inset 0 -2px 0 var(--brand-600);
+  }
+}
+
+// La fila de "sin datos" no es clicable ni se resalta.
+.dt tbody tr.empty-tr {
+  background: var(--grid-bg);
+  cursor: default;
+
+  &:hover {
+    background: var(--grid-bg);
+  }
+}
+
+// Números a la derecha con cifras tabulares; códigos en monospace.
+.dt th.num,
+.dt td.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+}
+
+.dt td.code {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-12);
+  color: var(--text-secondary);
+}
+
+// Columna de reorden (handle al final, tras acciones).
+.dt th.col-reorder,
+.dt td.col-reorder {
+  width: 40px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+// Columna de selección (checkbox).
+.dt th.col-select,
+.dt td.col-select {
+  width: 44px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.dt .col-select input[type='checkbox'] {
+  width: 16px;
+  height: 16px;
+  border-radius: var(--r-xs);
+  cursor: pointer;
+  accent-color: var(--brand-800);
+}
+
+// Columna de acciones (Editar/Eliminar/…). Los botones los proyecta la página.
+.dt th.col-actions,
+.dt td.col-actions {
+  width: 1%;
+  white-space: nowrap;
+  text-align: right;
+}
+
+// ── Filas de grupo (opt-in con `[groupBy]`) ─────────────────────────────────
+// La fila de grupo rotula el conjunto y muestra sus subtotales; las filas hijas
+// van sangradas para que la jerarquía se lea sin líneas guía.
+.dt tbody tr.group-tr {
+  background: var(--surface-sunken);
+  font-weight: var(--fw-semibold);
+  cursor: pointer;
+
+  // El zebrado no aplica a la fila de grupo: su fondo es lo que la separa del detalle.
+  &:nth-child(even) {
+    background: var(--surface-sunken);
+  }
+
+  &:hover {
+    background: var(--hover);
+  }
+
+  > td {
+    border-top: 1px solid var(--border-strong);
+    border-bottom: 1px solid var(--border-strong);
+    color: var(--text);
+  }
+}
+
+// Disparador del grupo: <button> real (foco y teclado) pintado como texto. El clic burbujea
+// hasta el <tr>, que es quien alterna — por eso no lleva handler propio.
+.dt .group-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: none;
+    border-radius: var(--r-xs);
+    box-shadow: var(--focus-ring);
+  }
+}
+
+// Botón "expandir/contraer todo" de la cabecera (primera columna).
+.dt thead th .group-all {
+  display: inline-flex;
+  align-items: center;
+  padding: 0;
+  margin-right: var(--sp-2);
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  vertical-align: middle;
+
+  &:focus-visible {
+    outline: none;
+    border-radius: var(--r-xs);
+    box-shadow: var(--focus-ring);
+  }
+}
+
+// Chevron: apunta a la derecha cerrado, abajo abierto.
+.dt erp-icon.group-chev {
+  flex: none;
+  font-size: var(--icon-md);
+  color: var(--text-muted);
+  transition: transform var(--dur-fast) var(--ease);
+
+  &.is-open {
+    transform: rotate(90deg);
+  }
+}
+
+.dt .group-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 18px;
+  padding: 0 var(--sp-1);
+  border-radius: var(--r-full);
+  background: var(--active);
+  color: var(--active-text);
+  font-size: var(--fs-11);
+  font-weight: var(--fw-semibold);
+}
+
+// Filas hijas: sangría en la primera columna para marcar el nivel.
+.dt tbody tr.child-tr > td:first-child {
+  padding-left: var(--sp-8);
+}
+
+// Fila vacía.
+.dt .empty-row {
+  padding: var(--sp-10) var(--sp-4);
+  text-align: center;
+  color: var(--text-muted);
+  font-size: var(--fs-13);
+}
+
+// Densidad compacta (la controla el botón de densidad del toolbar).
+.dt.is-compact thead th,
+.dt.is-compact tbody td,
+.dt.is-compact tfoot td {
+  padding-top: var(--grid-cell-py-compact);
+  padding-bottom: var(--grid-cell-py-compact);
+}
+
+// ── Handle de arrastre ──────────────────────────────────────────────────────
+// Base compartida con los botones de acción proyectados (ver bloque ::ng-deep).
+.dt .col-reorder .grid-reorder {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--control-h-sm);
+  height: var(--control-h-sm);
+  border-radius: var(--r-sm);
+  color: var(--text-dim);
+  font-size: var(--icon-md);
+  cursor: grab;
+  transition:
+    background var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease);
+
+  &:hover {
+    background: var(--hover);
+    color: var(--text);
+  }
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// CONTENIDO PROYECTADO POR LA PÁGINA
+// Estos nodos se declaran en el template de la página (#rowActions, #gridFooter,
+// plantillas [erpCell]), así que llevan SU atributo de encapsulado y no el
+// nuestro: sin ::ng-deep no los alcanzamos. No es deuda del motor de tabla —
+// es el precio de la proyección de contenido, y no desaparece cambiando de tabla.
+// ═════════════════════════════════════════════════════════════════════════════
+:host ::ng-deep {
+  // Botones de acción de fila.
+  .col-actions .grid-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--control-h-sm);
+    height: var(--control-h-sm);
+    border: 0;
+    border-radius: var(--r-sm);
+    background: transparent;
+    color: var(--text-muted);
+    font-size: var(--icon-md);
+    cursor: pointer;
+    transition:
+      background var(--dur-fast) var(--ease),
+      color var(--dur-fast) var(--ease);
+
+    &:hover {
+      background: var(--hover);
+      color: var(--text);
+    }
+  }
+
+  .col-actions .grid-action--danger:hover {
+    background: var(--danger-bg);
+    color: var(--danger-fg);
+  }
+
+  // Fila(s) de totales: las aporta la página vía #gridFooter y se fijan al fondo.
+  .dt tfoot > tr > td {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    padding: var(--grid-cell-py) var(--grid-cell-px);
+    border-top: 1px solid var(--grid-header-border);
+    background: var(--grid-header-bg);
+    font-weight: var(--fw-semibold);
+    color: var(--text);
+
+    &.num {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+  }
+
+  // ── Jerarquía contable: DISPONIBLE pero SIN USO todavía ───────────────────
+  // (se aplicará cuando lleguen datos del plan de cuentas jerárquico).
+  .level-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 18px;
+    padding: 0 var(--sp-1);
+    border-radius: var(--r-full);
+    background: var(--active);
+    color: var(--active-text);
+    font-size: var(--fs-11);
+    font-weight: var(--fw-semibold);
+  }
+
+  tr.lvl-1 > td:first-child {
+    padding-left: var(--grid-cell-px);
+    font-weight: var(--fw-semibold);
+  }
+  tr.lvl-2 > td:first-child {
+    padding-left: var(--sp-8);
+  }
+  tr.lvl-3 > td:first-child {
+    padding-left: var(--sp-12);
+    color: var(--text-muted);
+  }
+}
+
+// ── Móvil: cada fila se presenta como TARJETA (columna → dato), sin scroll ───
+// Mismo DOM que la tabla (sin nodos extra ni JS): solo se reestructura con CSS,
+// usando `data-label` de cada celda como etiqueta. Coste de performance: nulo.
+// Al ser tabla nativa, esto ya no depende de clases de ningún motor.
+@media (max-width: 768px) {
+  .tablewrap {
+    overflow: visible; // en móvil (tarjetas) no hay scroll interno
+  }
+
+  .dt,
+  .dt tbody {
+    display: block;
+  }
+
+  // Se ocultan los encabezados (su texto pasa a cada celda vía data-label) y los totales.
+  .dt thead,
+  .dt tfoot {
+    display: none;
+  }
+
+  // Cada fila = una tarjeta.
+  .dt tbody tr {
+    display: block;
+    margin-bottom: var(--sp-3);
+    border-radius: var(--r-md);
+    background: var(--surface);
+    box-shadow: var(--hairline), var(--sh-1);
+    overflow: hidden;
+
+    // En tarjetas, las filas alternas no aplican (cada una es su superficie).
+    &:nth-child(even) {
+      background: var(--surface);
+    }
+  }
+
+  // Cada celda = una fila "ETIQUETA … valor" dentro de la tarjeta.
+  .dt tbody td {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-4);
+    padding: var(--sp-2) var(--sp-4);
+    border: 0;
+    border-bottom: 1px solid var(--border-subtle);
+    text-align: right;
+
+    &::before {
+      content: attr(data-label);
+      flex: none;
+      text-align: left;
+      font-size: var(--fs-11);
+      font-weight: var(--fw-semibold);
+      text-transform: uppercase;
+      letter-spacing: var(--tracking-caps);
+      color: var(--text-muted);
+    }
+
+    &:last-child {
+      border-bottom: 0;
+    }
+  }
+
+  // Fila de grupo: cabecera del bloque, sin etiquetas de columna ni celdas en blanco.
+  .dt tbody tr.group-tr {
+    background: var(--surface-sunken);
+    box-shadow: none;
+
+    &:nth-child(even) {
+      background: var(--surface-sunken);
+    }
+  }
+
+  .dt tbody tr.group-tr td.is-blank {
+    display: none;
+  }
+
+  .dt tbody tr.group-tr td:first-child::before {
+    content: none;
+  }
+
+  // Sin scroll horizontal en tarjetas: la sangría de las hijas no aporta.
+  .dt tbody tr.child-tr > td:first-child {
+    padding-left: var(--sp-4);
+  }
+
+  // La fila vacía no aplica al formato tarjeta.
+  .dt tbody td.empty-row {
+    display: block;
+    border-bottom: 0;
+    text-align: center;
+
+    &::before {
+      content: none;
+    }
+  }
+}

@@ -1,0 +1,144 @@
+:host {
+  position: relative;
+  display: inline-block;
+}
+
+.userchip {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 40px;
+  padding: 0 0.6rem;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--text-on-brand);
+  cursor: pointer;
+
+  &:hover,
+  &.is-open {
+    background: rgba(255, 255, 255, 0.1);
+  }
+}
+
+.userchip__avatar,
+.menu__avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10%;
+  background: var(--surface);
+  flex: none;
+  overflow: hidden;
+}
+
+.avatar__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.userchip__meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.15;
+}
+
+.userchip__name {
+  font-weight: var(--fw-semibold);
+  font-size: var(--fs-13);
+}
+
+.userchip__role {
+  font-size: var(--fs-11);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.userchip__caret {
+  font-size: var(--icon-sm);
+  opacity: 0.8;
+  transform: rotate(90deg);
+}
+
+// En celular sólo se muestra el avatar: ocultamos nombre/rol y el caret.
+@media (max-width: 768px) {
+  .userchip {
+    gap: 0;
+    padding: 0;
+  }
+
+  .userchip__meta,
+  .userchip__caret {
+    display: none;
+  }
+}
+
+.menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 232px;
+  padding: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  box-shadow: var(--sh-2);
+  z-index: 50;
+}
+
+.menu__header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.6rem 0.7rem;
+}
+
+.menu__id {
+  display: flex;
+  flex-direction: column;
+  color: var(--text);
+
+  small {
+    color: var(--text-muted);
+  }
+}
+
+.menu__group {
+  padding: 4px 0;
+  border-top: 1px solid var(--border);
+}
+
+.menu__item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.5rem 0.6rem;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  erp-icon {
+    font-size: var(--icon-md);
+    color: var(--text-muted);
+  }
+
+  &:hover {
+    background: var(--hover);
+  }
+
+  &--danger {
+    color: var(--danger-fg);
+
+    erp-icon {
+      color: var(--danger-fg);
+    }
+  }
+}

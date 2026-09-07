@@ -1,0 +1,103 @@
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  // Velo con desenfoque leve: separa el modal del fondo sin oscurecerlo tanto.
+  background: var(--overlay);
+  backdrop-filter: blur(2px);
+}
+
+.modal {
+  position: fixed;
+  z-index: 1001;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  width: min(520px, calc(100vw - 2rem));
+  max-height: calc(100vh - 2rem);
+
+  &.modal--lg {
+    width: min(900px, calc(100vw - 2rem));
+  }
+
+  &.modal--xl {
+    width: min(1100px, calc(100vw - 2rem));
+  }
+
+  // Pantalla completa: ocupa casi todo el viewport (gana a los anchos md/lg/xl).
+  &.modal--max {
+    width: calc(100vw - 1.5rem);
+    height: calc(100vh - 1.5rem);
+    max-height: calc(100vh - 1.5rem);
+  }
+  background: var(--surface);
+  // Radio lg: el modal es la superficie de mayor jerarquía, no comparte radio
+  // con las tarjetas (md) ni con los botones (sm).
+  border-radius: var(--r-lg);
+  box-shadow: var(--sh-overlay);
+  overflow: hidden;
+}
+
+.modal__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  padding: var(--sp-4) var(--sp-5);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.modal__title {
+  margin: 0;
+  font-size: var(--fs-16);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--tracking-tight);
+  color: var(--text);
+}
+
+.modal__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+}
+
+.modal__icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--control-h-sm);
+  height: var(--control-h-sm);
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: var(--icon-lg);
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease);
+
+  &:hover {
+    background: var(--hover);
+    color: var(--text);
+  }
+}
+
+.modal__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: var(--sp-5);
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--n-300) transparent;
+}
+
+.modal__foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--sp-2);
+  padding: var(--sp-4) var(--sp-5);
+  border-top: 1px solid var(--border-subtle);
+  // Pie hundido: ancla visualmente las acciones y separa del cuerpo scrolleable.
+  background: var(--surface-sunken);
+}

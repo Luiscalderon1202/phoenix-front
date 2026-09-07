@@ -1,0 +1,11 @@
+@for (campo of campos(); track campo) {
+  <label class="field" [class]="anchoClase(campo)">
+    <span>{{ etiquetas[campo] }} <span class="req">*</span></span>
+    <select (change)="onSelect(campo, $any($event.target).value)">
+      <option value="" [selected]="valor()[campo] === undefined">Seleccione…</option>
+      @for (o of opciones(campo); track o.value) {
+        <option [value]="o.value" [selected]="o.value === valor()[campo]">{{ o.label }}</option>
+      }
+    </select>
+  </label>
+}
