@@ -51,7 +51,9 @@
 .app__content {
   flex: 1 1 auto;
   overflow: auto;
-  padding: var(--content-gutter);
+  // Menos aire ARRIBA que a los lados: es el borde contra el navbar, no un margen de
+  // lectura, y esos 8px se los queda la grilla en todas las pantallas.
+  padding: var(--sp-4) var(--content-gutter) var(--content-gutter);
   background: transparent;
 
   // El scroll interno usa scrollbar fina para no robar ancho a las tablas.

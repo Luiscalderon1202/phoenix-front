@@ -24,6 +24,24 @@
       "@phoenix/shared/ui/chrome": ["./libs/shared/ui/src/chrome.ts"],
       "@phoenix/basic/domain": ["./libs/basic/domain/src/index.ts"],
       "@phoenix/basic/data-access": ["./libs/basic/data-access/src/index.ts"],
+      "@phoenix/basic/feature-tipos-telefono": [
+        "./libs/basic/feature-tipos-telefono/src/index.ts"
+      ],
+      "@phoenix/basic/feature-tipos-email": [
+        "./libs/basic/feature-tipos-email/src/index.ts"
+      ],
+      "@phoenix/basic/feature-tipos-direccion": [
+        "./libs/basic/feature-tipos-direccion/src/index.ts"
+      ],
+      "@phoenix/basic/feature-social-media": [
+        "./libs/basic/feature-social-media/src/index.ts"
+      ],
+      "@phoenix/basic/feature-tablas-basicas": [
+        "./libs/basic/feature-tablas-basicas/src/index.ts"
+      ],
+      "@phoenix/basic/feature-tipos-empresa": [
+        "./libs/basic/feature-tipos-empresa/src/index.ts"
+      ],
       "@phoenix/basic/feature-personas": [
         "./libs/basic/feature-personas/src/index.ts"
       ]

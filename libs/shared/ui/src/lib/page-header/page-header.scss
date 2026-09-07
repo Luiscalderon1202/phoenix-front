@@ -16,6 +16,12 @@
   min-width: 0;
 }
 
+// Sin breadcrumbs, el margen superior del título no separa de nada: solo empuja la pantalla
+// hacia abajo. Se quita para que el título arranque pegado al borde del lienzo.
+.page-header--sin-migas .page-header__title {
+  margin-top: 0;
+}
+
 // El h1 estaba a 16px sobre un cuerpo de 14px (ratio 1.14): no marcaba el inicio
 // de la pantalla. A 20px/600 con tracking cerrado sí lee como título de página.
 .page-header__title {

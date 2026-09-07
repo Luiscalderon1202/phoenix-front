@@ -1,0 +1,176 @@
+:host {
+  display: block;
+}
+
+.tipos-empresa {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+// Fila de filtros: ocupa el ancho completo de la rejilla del `erp-filter-panel` y reparte los
+// campos en flex; "Buscar" se estira para llenar el hueco. Mismo patrón que Personas.
+.filter-fields {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.85rem 1rem;
+}
+
+// Campo genérico (label arriba, control debajo). El estilo de los controles del panel de
+// filtros lo aporta `erp-filter-panel`: no se re-estilan input/select aquí.
+.field {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+
+  > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: var(--fs-12);
+    font-weight: var(--fw-semibold);
+    color: var(--text-muted);
+  }
+}
+
+// Buscar elástico: crece hasta llenar el espacio horizontal libre de la fila.
+.field--search {
+  flex: 1 1 260px;
+  min-width: 0;
+}
+
+// Acción "Buscar": ancho natural, alineada a la base del resto de controles.
+.field--action {
+  flex: 0 0 auto;
+}
+
+.field--action .btn {
+  width: 130px;
+  justify-content: center;
+
+  .erp-icon {
+    font-size: var(--icon-lg);
+  }
+}
+
+// Botón de cierre de la cabecera: vuelve a la pantalla anterior.
+.btn-cerrar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--text-muted);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--text);
+    border-color: var(--text-muted);
+  }
+
+  &:focus-visible {
+    outline: none;
+    border-color: var(--brand-700);
+    box-shadow: var(--focus-ring);
+  }
+
+  .erp-icon {
+    font-size: var(--icon-lg);
+  }
+}
+
+
+.hint {
+  margin: 0.35rem 0 0;
+  font-size: var(--fs-12);
+  color: var(--text-muted);
+}
+
+// ── Formulario del modal ──────────────────────────────────────────────
+// Aquí sí se estilan los controles: están fuera del `erp-filter-panel`, que es quien los
+// viste en la zona de filtros.
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  input {
+    padding: 0.5rem 0.65rem;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm, 4px);
+    background: var(--surface);
+    color: var(--text);
+    font: inherit;
+  }
+
+  input:focus-visible {
+    outline: 2px solid var(--accent, #3b82f6);
+    outline-offset: 1px;
+  }
+}
+
+.req {
+  color: var(--danger, #dc2626);
+  font-style: normal;
+}
+
+.field__error {
+  color: var(--danger, #dc2626);
+  font-size: var(--fs-12);
+}
+
+.form__nota {
+  margin: 0;
+  font-size: var(--fs-12);
+  color: var(--text-muted);
+}
+
+// Escritorio: layout de alto fijo — la grilla ocupa el espacio restante y hace su propio
+// scroll, en vez de estirar la página entera.
+@media (min-width: 769px) {
+  :host {
+    height: 100%;
+  }
+
+  .tipos-empresa {
+    height: 100%;
+  }
+
+  .tipos-empresa > erp-page-header,
+  .tipos-empresa > erp-filter-panel,
+  .tipos-empresa > .alert-error,
+  .tipos-empresa > .hint {
+    flex: none;
+  }
+
+  .tipos-empresa > erp-data-grid {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+}
+
+// ── Impresión ─────────────────────────────────────────────────────────
+// En el papel sobran los controles: el encabezado de pantalla, el panel de filtros (lo
+// sustituye el `erp-print-header`) y la nota del arrastre. La grilla se imprime entera, sin
+// el alto fijo ni el scroll propio que usa en pantalla.
+@media print {
+  .tipos-empresa > erp-page-header,
+  .tipos-empresa > erp-filter-panel,
+  .tipos-empresa > .hint {
+    display: none;
+  }
+
+  .tipos-empresa,
+  .tipos-empresa > erp-data-grid {
+    height: auto;
+    overflow: visible;
+  }
+}

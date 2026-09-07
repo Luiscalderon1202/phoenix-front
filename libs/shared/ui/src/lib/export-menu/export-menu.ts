@@ -44,6 +44,14 @@ export class ExportMenu {
   /** Lista de opciones a medida; si se define, reemplaza la lista Excel/CSV por defecto. */
   readonly options = input<readonly ExportMenuOption[] | null>(null);
 
+  /**
+   * Rótulo e icono del botón. Por defecto "Exportar", que es el uso habitual; con `[options]`
+   * el menú sirve para agrupar cualquier familia de acciones y necesita su propio nombre
+   * (p. ej. "Imprimir" para reunir la vista PDF y la impresión de pantalla).
+   */
+  readonly label = input('Exportar');
+  readonly icon = input('download');
+
   readonly exportar = output<ExportChoice>();
   /** Emite el `value` de la opción elegida (modo `[options]`). */
   readonly seleccion = output<string>();

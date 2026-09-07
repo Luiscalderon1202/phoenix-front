@@ -1,0 +1,70 @@
+<div class="tablas">
+  <erp-page-header
+    title="Tablas básicas"
+    subtitle="Selecciona un catálogo para administrar sus registros."
+  />
+
+  <div class="barra">
+    <label class="buscador">
+      <erp-icon name="search" />
+      <input
+        type="search"
+        placeholder="Buscar catálogo…"
+        [value]="busqueda()"
+        (input)="onBuscar($any($event.target).value)"
+      />
+      @if (busqueda()) {
+        <button type="button" class="buscador__limpiar" (click)="onLimpiar()" aria-label="Limpiar">
+          <erp-icon name="close" />
+        </button>
+      }
+    </label>
+
+    <!-- El avance es dato útil durante la migración: dice cuánto queda del legacy. -->
+    <span class="avance">{{ avance().migradas }} de {{ avance().total }} migradas</span>
+  </div>
+
+  @for (grupo of gruposVisibles(); track grupo.titulo) {
+    <section class="grupo">
+      <h2 class="grupo__titulo">{{ grupo.titulo }}</h2>
+      <div class="opciones">
+        @for (opt of grupo.opciones; track opt.titulo) {
+          @if (opt.migrada) {
+            <a class="opcion" [routerLink]="opt.destino">
+              <span class="opcion__icono" [style.--acento]="opt.acento">
+                <erp-icon [name]="opt.icono" />
+              </span>
+              <span class="opcion__texto">
+                <span class="opcion__titulo">{{ opt.titulo }}</span>
+                <span class="opcion__desc">{{ opt.descripcion }}</span>
+              </span>
+              <erp-icon class="opcion__flecha" name="chevron" />
+            </a>
+          } @else {
+            <!-- Aún en el PHP: navegación completa de página, no routerLink. El ↗ avisa de
+                 que se sale de Angular, igual que en el menú lateral. -->
+            <a class="opcion opcion--externa" [href]="opt.destino">
+              <span class="opcion__icono" [style.--acento]="opt.acento">
+                <erp-icon [name]="opt.icono" />
+              </span>
+              <span class="opcion__texto">
+                <span class="opcion__titulo">{{ opt.titulo }}</span>
+                <span class="opcion__desc">{{ opt.descripcion }}</span>
+              </span>
+              <span class="opcion__externa" title="Abre el sistema anterior" aria-hidden="true"
+                >&#8599;</span
+              >
+            </a>
+          }
+        }
+      </div>
+    </section>
+  }
+
+  @if (sinResultados()) {
+    <p class="vacio">
+      Ningún catálogo coincide con «{{ busqueda() }}».
+      <button type="button" class="btn btn--ghost" (click)="onLimpiar()">Ver todos</button>
+    </p>
+  }
+</div>

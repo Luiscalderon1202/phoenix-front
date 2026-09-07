@@ -1,4 +1,10 @@
-<erp-modal [(open)]="open" [title]="nombre()" size="xl" [maximizable]="true">
+<erp-modal
+  [(open)]="open"
+  [title]="nombre()"
+  size="xl"
+  [maximizable]="true"
+  (closed)="closed.emit()"
+>
   @if (url(); as u) {
     @if (esImagen()) {
       <img class="fv__img" [src]="u" [alt]="nombre()" />

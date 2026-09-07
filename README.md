@@ -28,7 +28,9 @@ phoenix-front/
 │   ├── basic/                  # Módulos de negocio
 │   │   ├── data-access/        #   Servicios y estado (API calls)
 │   │   ├── domain/             #   Modelos e interfaces del dominio
-│   │   └── feature-personas/   #   Feature: gestión de personas
+│   │   ├── feature-personas/   #   Feature: gestión de personas
+│   │   ├── feature-tablas-basicas/ # Feature: índice de los 40 catálogos
+│   │   └── feature-tipos-empresa/ # Feature: tipos de empresa (CRUD + PDF)
 │   └── shared/                 # Librerías compartidas
 │       ├── api/                #   Endpoints y tipos de la API
 │       ├── api-client/         #   Cliente HTTP generado (OpenAPI)
@@ -86,6 +88,35 @@ npx nx lint erp
 # Ver el grafo de dependencias
 npx nx graph
 ```
+
+## Tablas básicas y la migración por partes
+
+`/mantenimiento/tablas-basicas` replica el índice de `TablasBasicas.php`: 40
+catálogos en 11 grupos. Cada tarjeta enlaza a la ruta Angular si esa tabla ya está
+migrada, o al `.php` del legacy si no, marcándolo con ↗.
+
+Migrar una tabla es cambiar dos líneas en
+`libs/basic/feature-tablas-basicas/src/lib/tablas-basicas/tablas.ts`: se sustituye
+su `legacy` por la `ruta` nueva. El menú no se toca.
+
+Si el legacy vive en otro host (lo normal en desarrollo), se declara en
+`assets/config.json`:
+
+```json
+{ "apiBaseUrl": "/api", "legacyBaseUrl": "http://localhost/pseraphis" }
+```
+
+## Cliente de la API
+
+El contrato es `../phoenix-api/api/openapi.yaml`, en el **otro repositorio**. Los dos
+no comparten código: solo ese archivo.
+
+```bash
+npm run api:client    # regenera libs/shared/api-client desde el spec
+```
+
+Tras cambiar el backend hay que regenerarlo, o los tipos se quedan mintiendo en
+silencio.
 
 ## Arquitectura
 

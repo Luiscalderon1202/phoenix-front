@@ -1,0 +1,203 @@
+:host {
+  display: block;
+}
+
+.tablas {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+// ── Barra: buscador + contador de avance ──────────────────────────────
+.barra {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.buscador {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1 1 260px;
+  max-width: 420px;
+  padding: 0.45rem 0.65rem;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--text-muted);
+
+  &:focus-within {
+    border-color: var(--brand-700);
+    box-shadow: var(--focus-ring);
+  }
+
+  input {
+    flex: 1 1 auto;
+    min-width: 0;
+    border: 0;
+    background: none;
+    color: var(--text);
+    font: inherit;
+    outline: none;
+  }
+
+  // El navegador dibuja su propia X en los <input type="search"> de WebKit, encima de la
+  // nuestra. Se quita para no tener dos botones de limpiar pegados.
+  input::-webkit-search-cancel-button {
+    display: none;
+  }
+}
+
+.buscador__limpiar {
+  display: inline-flex;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--text);
+  }
+}
+
+.avance {
+  font-size: var(--fs-12);
+  color: var(--text-muted);
+}
+
+// ── Grupos ────────────────────────────────────────────────────────────
+.grupo {
+  margin-top: 1.25rem;
+
+  &:first-of-type {
+    margin-top: 0.75rem;
+  }
+}
+
+.grupo__titulo {
+  margin: 0 0 0.65rem;
+  font-size: var(--fs-13);
+  font-weight: var(--fw-bold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+// Móvil: una columna. Escritorio: rejilla que reparte las tarjetas conservando su tamaño.
+.opciones {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+
+  @media (min-width: 640px) {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  }
+}
+
+// ── Tarjeta ───────────────────────────────────────────────────────────
+.opcion {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--text);
+  text-decoration: none;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s,
+    transform 0.15s;
+
+  &:hover {
+    border-color: var(--border-strong);
+    box-shadow: var(--sh-2);
+    transform: translateY(-1px);
+  }
+
+  &:focus-visible {
+    outline: none;
+    border-color: var(--brand-700);
+    box-shadow: var(--focus-ring);
+  }
+
+  // Quien viaja al sistema anterior lo sabe antes de pulsar, no después.
+  &--externa {
+    border-style: dashed;
+  }
+}
+
+// Badge del icono, teñido con el acento de la opción.
+//
+// ⚠ El acento se lee de `--acento`, el MISMO nombre que la plantilla escribe con
+// `[style.--acento]`. En la pantalla equivalente de ezer el binding define `--accent` pero el
+// estilo consume `--accent-500`, así que el color de cada tarjeta nunca llega a aplicarse.
+.opcion__icono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  font-size: var(--icon-xl);
+  color: var(--acento);
+  background: color-mix(in srgb, var(--acento) 14%, transparent);
+}
+
+.opcion__texto {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.opcion__titulo {
+  font-size: var(--fs-14);
+  font-weight: var(--fw-semibold);
+  color: var(--text);
+}
+
+.opcion__desc {
+  font-size: var(--fs-12);
+  color: var(--text-muted);
+  // Las descripciones son de una línea; si alguna crece, se corta en vez de descuadrar la
+  // altura de su fila de la rejilla.
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.opcion__flecha {
+  flex: 0 0 auto;
+  font-size: var(--icon-lg);
+  color: var(--text-muted);
+
+  .opcion:hover & {
+    color: var(--brand-700);
+  }
+}
+
+.opcion__externa {
+  flex: 0 0 auto;
+  font-size: var(--fs-14);
+  color: var(--text-muted);
+}
+
+.vacio {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  font-size: var(--fs-13);
+  color: var(--text-muted);
+}

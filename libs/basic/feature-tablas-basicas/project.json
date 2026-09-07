@@ -1,0 +1,13 @@
+{
+  "name": "basic-feature-tablas-basicas",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/basic/feature-tablas-basicas/src",
+  "prefix": "erp",
+  "projectType": "library",
+  "tags": ["scope:basic", "type:feature"],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

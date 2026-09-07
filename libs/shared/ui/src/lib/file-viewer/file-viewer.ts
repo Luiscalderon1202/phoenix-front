@@ -1,4 +1,12 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, model } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  input,
+  model,
+  output,
+} from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Modal } from '../modal/modal';
 import { Icon } from '../icon/icon';
@@ -29,6 +37,13 @@ export class FileViewer {
   readonly mime = input<string>('');
   /** Nombre para el título del modal. */
   readonly nombre = input<string>('');
+
+  /**
+   * Se emite al cerrar el visor (backdrop, X o Escape). Reenvía el `closed` del modal, que
+   * de otro modo se quedaría dentro: quien pasa una URL de blob la necesita para revocarla,
+   * y sin este evento el blob vive hasta que se recargue la página.
+   */
+  readonly closed = output<void>();
 
   protected readonly esImagen = computed(() => this.mime().startsWith('image/'));
   protected readonly esPdf = computed(() => this.mime() === 'application/pdf');

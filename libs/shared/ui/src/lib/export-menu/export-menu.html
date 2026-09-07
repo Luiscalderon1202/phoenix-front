@@ -6,44 +6,41 @@
     [attr.aria-expanded]="open()"
     (click)="toggle()"
   >
-    <erp-icon name="download" /> Exportar
+    <erp-icon [name]="icon()" /> {{ label() }}
     <erp-icon name="chevron" class="export-menu__caret" />
   </button>
 
   @if (open()) {
-    <ul class="export-menu__list" role="menu">
-      @if (options(); as opts) {
-        @for (o of opts; track o.value) {
-          <li>
-            <button type="button" role="menuitem" (click)="chooseOption(o.value)">
-              <erp-icon [name]="o.icon ?? 'excel'" /> {{ o.label }}
-            </button>
-          </li>
-        }
-      } @else {
-        <li>
-          <button type="button" role="menuitem" (click)="choose('excel', false)">
-            <erp-icon name="excel" /> Excel
-          </button>
-        </li>
-        <li>
-          <button type="button" role="menuitem" (click)="choose('csv', false)">
-            <erp-icon name="csv" /> CSV
-          </button>
-        </li>
-        @if (detalle()) {
-          <li>
-            <button type="button" role="menuitem" (click)="choose('excel', true)">
-              <erp-icon name="excel" /> Excel detalle
-            </button>
-          </li>
-          <li>
-            <button type="button" role="menuitem" (click)="choose('csv', true)">
-              <erp-icon name="csv" /> CSV detalle
-            </button>
-          </li>
-        }
-      }
-    </ul>
+  <ul class="export-menu__list" role="menu">
+    @if (options(); as opts) { @for (o of opts; track o.value) {
+    <li>
+      <button type="button" role="menuitem" (click)="chooseOption(o.value)">
+        <erp-icon [name]="o.icon ?? 'excel'" /> {{ o.label }}
+      </button>
+    </li>
+    } } @else {
+    <li>
+      <button type="button" role="menuitem" (click)="choose('excel', false)">
+        <erp-icon name="excel" /> Excel
+      </button>
+    </li>
+    <li>
+      <button type="button" role="menuitem" (click)="choose('csv', false)">
+        <erp-icon name="csv" /> CSV
+      </button>
+    </li>
+    @if (detalle()) {
+    <li>
+      <button type="button" role="menuitem" (click)="choose('excel', true)">
+        <erp-icon name="excel" /> Excel detalle
+      </button>
+    </li>
+    <li>
+      <button type="button" role="menuitem" (click)="choose('csv', true)">
+        <erp-icon name="csv" /> CSV detalle
+      </button>
+    </li>
+    } }
+  </ul>
   }
 </div>

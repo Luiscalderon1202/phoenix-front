@@ -71,7 +71,19 @@
   transform: rotate(0deg);
 }
 
+// Campos y acciones COMPARTEN fila: los botones se colocan a la derecha, en el hueco que
+// dejan los campos, en vez de reclamar una franja propia debajo. En una pantalla de listado
+// esa franja costaba ~69px de alto —casi lo mismo que la cabecera entera— y se los queda la
+// grilla, que es lo que se viene a mirar.
+//
+// Cuando los campos necesitan todo el ancho (formularios con muchos filtros), el `wrap` baja
+// las acciones a su propia línea y el panel se comporta como antes.
 .filter__body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--sp-3) var(--sp-4);
   padding: var(--sp-4);
   border-top: 1px solid var(--border-subtle);
 }
@@ -86,7 +98,12 @@
 }
 
 // Grid de 12 columnas: la página coloca cada .field con .f-2/.f-4/.f-6/.f-12.
+//
+// `flex: 1 1 420px` es lo que decide si las acciones caben al lado: por debajo de ese ancho
+// los campos reclaman la fila entera y los botones bajan solos.
 .filter__fields {
+  flex: 1 1 420px;
+  min-width: 0;
   display: grid;
   grid-template-columns: repeat(12, 1fr);
   gap: var(--sp-4);
@@ -126,12 +143,13 @@
 }
 
 // ── Acciones (botones proyectados por la página vía slot [filterActions]) ──
+// Sin borde ni margen propios: ya no son una franja aparte, sino el extremo derecho de la
+// fila de filtros. El `gap` del cuerpo es lo que las separa de los campos.
 .filter__actions {
+  flex: 0 0 auto;
   display: flex;
   justify-content: flex-end;
-  margin-top: var(--sp-4);
-  padding-top: var(--sp-4);
-  border-top: 1px solid var(--border-subtle);
+  margin-left: auto;
 }
 
 // Solo la disposición en fila. El estilo de los botones lo da la primitiva

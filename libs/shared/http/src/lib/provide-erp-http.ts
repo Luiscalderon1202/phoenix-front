@@ -1,6 +1,6 @@
 import { EnvironmentProviders, makeEnvironmentProviders } from '@angular/core';
 import { provideHttpClient, withInterceptors, withXhr } from '@angular/common/http';
-import { API_BASE_URL } from './api-config';
+import { API_BASE_URL, LEGACY_BASE_URL } from './api-config';
 import { getRuntimeConfig, RUNTIME_CONFIG } from './runtime-config';
 import { credentialsInterceptor } from './interceptors/credentials-interceptor';
 import { csrfInterceptor } from './interceptors/csrf-interceptor';
@@ -28,6 +28,7 @@ export function provideErpHttp(): EnvironmentProviders {
   return makeEnvironmentProviders([
     { provide: API_BASE_URL,   useFactory: () => getRuntimeConfig().apiBaseUrl },
     { provide: RUNTIME_CONFIG, useFactory: () => getRuntimeConfig() },
+    { provide: LEGACY_BASE_URL, useFactory: () => getRuntimeConfig().legacyBaseUrl ?? '' },
     provideHttpClient(withXhr(), 
       // tenantInterceptor: fuera. pseraphis es single-tenant (1 corporacion); el
       // eje real es multiempresa y viaja como ?empresaid= por peticion, no como

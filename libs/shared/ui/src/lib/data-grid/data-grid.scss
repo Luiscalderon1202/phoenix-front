@@ -649,3 +649,33 @@
     }
   }
 }
+
+// ── Impresión ─────────────────────────────────────────────────────────
+// En el papel no hay con qué interactuar: fuera la toolbar, los checkbox de
+// selección, los botones de acción por fila y el asa de reordenar. Lo que queda
+// son los datos, que es lo que se quiere leer o archivar.
+@media print {
+  .grid-toolbar,
+  .col-select,
+  .col-actions,
+  .col-reorder {
+    display: none;
+  }
+
+  // El sticky no existe en papel: la cabecera se repite sola en cada página con
+  // `thead { display: table-header-group }`, que es el comportamiento por defecto.
+  thead th {
+    position: static;
+  }
+
+  // La fila de relleno solo existe para que la grilla ocupe su alto en pantalla.
+  .empty-tr {
+    display: none;
+  }
+
+  // Sin alto fijo ni scroll propio: la tabla fluye y se parte por páginas.
+  .tablewrap {
+    max-height: none;
+    overflow: visible;
+  }
+}

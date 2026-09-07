@@ -1,5 +1,7 @@
 <div class="personas">
-  <erp-page-header title="Personas" subtitle="Listado de personas registradas." />
+  <!-- Sin breadcrumbs ni subtítulo: la migaja repetía el título y el subtítulo describía lo
+       evidente. Esa franja se la queda la grilla, que es lo que se viene a mirar. -->
+  <erp-page-header title="Personas" [breadcrumbs]="false" />
 
   <erp-filter-panel [head]="false">
     <div class="filter-fields" [formGroup]="filters">

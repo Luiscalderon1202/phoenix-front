@@ -52,6 +52,60 @@ export const appRoutes: Route[] = [
         data: { breadcrumb: 'Mantenimiento' },
         children: [
           {
+            // Índice de los 40 catálogos. Es el destino de la fila 58 del menú
+            // (`TABLAS-BASICAS`), que en el legacy abre `TablasBasicas.php`: un hub, no
+            // una pantalla. Desde aquí se entra a cada tabla, migrada o no.
+            path: 'tablas-basicas',
+            canMatch: [procesoGuard('TABLAS-BASICAS')],
+            loadChildren: () =>
+              import('@phoenix/basic/feature-tablas-basicas').then(
+                (m) => m.TABLAS_BASICAS_ROUTES,
+              ),
+          },
+          {
+            path: 'tipos-telefono',
+            canMatch: [procesoGuard('TABLAS-BASICAS')],
+            loadChildren: () =>
+              import('@phoenix/basic/feature-tipos-telefono').then(
+                (m) => m.TIPOS_TELEFONO_ROUTES,
+              ),
+          },
+          {
+            path: 'tipos-email',
+            canMatch: [procesoGuard('TABLAS-BASICAS')],
+            loadChildren: () =>
+              import('@phoenix/basic/feature-tipos-email').then(
+                (m) => m.TIPOS_EMAIL_ROUTES,
+              ),
+          },
+          {
+            path: 'tipos-direccion',
+            canMatch: [procesoGuard('TABLAS-BASICAS')],
+            loadChildren: () =>
+              import('@phoenix/basic/feature-tipos-direccion').then(
+                (m) => m.TIPOS_DIRECCION_ROUTES,
+              ),
+          },
+          {
+            path: 'social-media',
+            canMatch: [procesoGuard('TABLAS-BASICAS')],
+            loadChildren: () =>
+              import('@phoenix/basic/feature-social-media').then(
+                (m) => m.SOCIAL_MEDIA_ROUTES,
+              ),
+          },
+          {
+            path: 'tipos-empresa',
+            // Mismo proceso que Personas usa para lo suyo, pero aquí es TABLAS-BASICAS:
+            // es el proceso que el legacy asigna a toda la pantalla TablasBasicas.php y
+            // el que las propias funciones de `basic.tipo_empresa` comprueban.
+            canMatch: [procesoGuard('TABLAS-BASICAS')],
+            loadChildren: () =>
+              import('@phoenix/basic/feature-tipos-empresa').then(
+                (m) => m.TIPOS_EMPRESA_ROUTES,
+              ),
+          },
+          {
             path: 'personas',
             // `procesoGuard` y no `permissionGuard`: en Phoenix la unidad de
             // permiso es `basic.menuweb.proceso`, no el par (menuid, acción) de
@@ -59,7 +113,9 @@ export const appRoutes: Route[] = [
             // y el backend revalida el mismo proceso con RequirePermiso.
             canMatch: [procesoGuard('PERSONA')],
             loadChildren: () =>
-              import('@phoenix/basic/feature-personas').then((m) => m.PERSONAS_ROUTES),
+              import('@phoenix/basic/feature-personas').then(
+                (m) => m.PERSONAS_ROUTES,
+              ),
           },
         ],
       },
