@@ -1,0 +1,16 @@
+{
+  "name": "inventarios-feature-tipos-consumo",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/inventarios/feature-tipos-consumo/src",
+  "prefix": "erp",
+  "projectType": "library",
+  "tags": [
+    "scope:inventarios",
+    "type:feature"
+  ],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

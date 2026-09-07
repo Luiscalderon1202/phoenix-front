@@ -74,3 +74,30 @@ sin granularidad de acción. No cambiar sin leer el modelo de permisos.
 
 `@nx/enforce-module-boundaries` con ejes scope + type. Al migrar un módulo del
 legacy hay que declarar su `scope:<modulo>` en `eslint.config.mjs`.
+
+Scopes declarados: `shared` (base, no depende de nadie), `basic` (tablas básicas
+y personas), `inventarios` (existencias, ventas y pedidos) y `tesorería` (caja,
+cobros y pagos). Los dos últimos van **por encima** de `basic` — un pedido se
+emite a una empresa, desde un almacén y para una persona, así que pueden mirar
+hacia abajo y `basic` no puede mirar hacia arriba. Entre ellos todavía no se
+conceden nada: las restricciones se abren cuando hay un import que las pida.
+
+## Dónde va una pantalla de tabla básica
+
+**Por el esquema de su tabla, no por el hub del que cuelga.** Las 40 opciones de
+`TablasBasicas.php` viven en esquemas distintos, así que Tipos de consumo o
+Canales de atención van a `libs/inventarios/`, no a `libs/basic/`, aunque el
+usuario llegue a ellas desde el mismo índice y compartan el proceso de permiso
+`TABLAS-BASICAS`. La ruta de la app sí las agrupa bajo `/mantenimiento/`, que es
+lo que el usuario ve.
+
+Migrar una de esas tablas es cambiar su `legacy` por `ruta` en
+`libs/basic/feature-tablas-basicas/.../tablas.ts`. El menú no se toca.
+
+## El proceso de permiso se decide por pantalla
+
+Casi todas las tablas del hub van con `procesoGuard('TABLAS-BASICAS')`, pero eso
+es una coincidencia, no una regla: **Tipos de movimiento de caja exige
+`TIPMOVCAJA`**, porque así lo declara `TipMovCaj.php` y así lo comprueban sus
+stored procedures. Antes de copiar el guard de la ruta de al lado, mirar el
+`$segProcesoMenu` del `.php` que se está migrando.

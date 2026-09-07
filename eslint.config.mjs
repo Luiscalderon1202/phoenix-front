@@ -38,6 +38,23 @@ export default [
               sourceTag: 'scope:basic',
               onlyDependOnLibsWithTags: ['scope:shared', 'scope:basic'],
             },
+            // `inventarios` = existencias, ventas y pedidos. Va POR ENCIMA de
+            // `basic`: un pedido se emite a una empresa, desde un almacén y para
+            // una persona, así que puede mirar hacia abajo. `basic` no puede
+            // mirar hacia aquí, y esa es toda la gracia de declararlo.
+            {
+              sourceTag: 'scope:inventarios',
+              onlyDependOnLibsWithTags: ['scope:shared', 'scope:basic', 'scope:inventarios'],
+            },
+            // `tesoreria` = caja, cobros y pagos. Como `inventarios`, va por
+            // encima de `basic`: un cobro se registra contra una empresa y una
+            // persona. Todavía no depende de `inventarios` y no se le concede
+            // hasta que lo necesite: las restricciones se abren cuando hay un
+            // import que las pida, no por si acaso.
+            {
+              sourceTag: 'scope:tesoreria',
+              onlyDependOnLibsWithTags: ['scope:shared', 'scope:basic', 'scope:tesoreria'],
+            },
             { sourceTag: 'scope:app', onlyDependOnLibsWithTags: ['*'] },
 
             // ---- Eje TYPE (capas dentro de cada scope) ----

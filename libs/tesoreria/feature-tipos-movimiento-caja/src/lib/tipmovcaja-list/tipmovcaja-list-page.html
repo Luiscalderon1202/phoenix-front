@@ -1,0 +1,231 @@
+<div class="tipos-movimiento-caja">
+  <erp-page-header title="Tipos de movimiento de caja" [breadcrumbs]="false">
+    <button
+      headerActions
+      type="button"
+      class="btn-cerrar"
+      title="Volver"
+      aria-label="Volver"
+      (click)="onCerrar()"
+    >
+      <erp-icon name="close" />
+    </button>
+  </erp-page-header>
+
+  <!-- Los tres filtros van al SERVIDOR, como en el legacy. Pulsar Buscar recarga el recurso. -->
+  <erp-filter-panel [head]="false">
+    <div class="filter-fields" [formGroup]="filters">
+      <label class="field field--search">
+        <span>Buscar</span>
+        <input
+          type="text"
+          formControlName="nombre"
+          placeholder="Nombre…"
+          (keyup.enter)="onApply()"
+        />
+      </label>
+
+      <label class="field">
+        <span>Tipo</span>
+        <select formControlName="tipo">
+          <option value="">Todos los tipos</option>
+          @for (t of tiposMovimiento; track t.valor) {
+          <option [value]="t.valor">{{ t.etiqueta }}</option>
+          }
+        </select>
+      </label>
+
+      <label class="field">
+        <span>Estado</span>
+        <select formControlName="estado">
+          <option value="">Todos</option>
+          <option value="Y">Activos</option>
+          <option value="N">Inactivos</option>
+        </select>
+      </label>
+
+      <div class="field field--action">
+        <button type="button" class="btn" (click)="onApply()">
+          <erp-icon name="search" /> Buscar
+        </button>
+      </div>
+    </div>
+
+    <div filterActions>
+      <erp-export-menu (exportar)="onExportar($event)" />
+      @if (seleccionadas().length) {
+      <button
+        type="button"
+        class="btn btn--danger"
+        (click)="onEliminarSeleccionadas()"
+      >
+        <erp-icon name="trash" /> Eliminar ({{ seleccionadas().length }})
+      </button>
+      }
+      <button type="button" class="btn" (click)="onNuevo()">
+        <erp-icon name="plus" /> Nuevo
+      </button>
+    </div>
+  </erp-filter-panel>
+
+  @if (error(); as err) {
+  <div class="alert-error alert-error--box">{{ err }}</div>
+  }
+
+  <!-- Sin `reorderable`: esta tabla no tiene columna `orden`. -->
+  <erp-data-grid
+    [columns]="columns"
+    [rows]="rowsPagina()"
+    [loading]="loading()"
+    [selectable]="true"
+    (selectionChange)="onSeleccion($event)"
+  >
+    <ng-template [erpCell]="'abreviatura'" let-row>
+      @if (row.abreviatura) { {{ row.abreviatura }} } @else { — }
+    </ng-template>
+
+    <ng-template [erpCell]="'tipo'" let-row>
+      {{ etiquetaTipo(row.tipo) }}
+    </ng-template>
+
+    <ng-template [erpCell]="'requiere'" let-row>
+      @if (row.requiere) { {{ row.requiere }} } @else { — }
+    </ng-template>
+
+    <!-- El SEGUNDO interruptor de la fila. Se pulsa igual que el estado. -->
+    <ng-template [erpCell]="'requerir_mesanio'" let-row>
+      <button
+        type="button"
+        class="badge"
+        [class.badge--on]="row.requerir_mesanio"
+        [class.badge--off]="!row.requerir_mesanio"
+        title="Cambiar si exige mes y año"
+        (click)="onToggleRequerirMesAnio(row); $event.stopPropagation()"
+      >
+        {{ row.requerir_mesanio ? 'Sí' : 'No' }}
+      </button>
+    </ng-template>
+
+    <ng-template [erpCell]="'estado'" let-row>
+      <button
+        type="button"
+        class="badge"
+        [class.badge--on]="row.estado"
+        [class.badge--off]="!row.estado"
+        title="Cambiar estado"
+        (click)="onToggleEstado(row); $event.stopPropagation()"
+      >
+        {{ row.estado ? 'Activo' : 'Inactivo' }}
+      </button>
+    </ng-template>
+
+    <ng-template #rowActions let-row>
+      <button
+        type="button"
+        class="grid-action"
+        title="Editar"
+        (click)="onEditar(row)"
+      >
+        <erp-icon name="edit" />
+      </button>
+      <button
+        type="button"
+        class="grid-action grid-action--danger"
+        title="Eliminar"
+        (click)="onEliminar(row)"
+      >
+        <erp-icon name="trash" />
+      </button>
+    </ng-template>
+
+    <erp-grid-footer
+      gridPagination
+      [meta]="meta()"
+      [pageSizes]="pageSizes"
+      (pageChange)="onPage($event)"
+      (pageSizeChange)="onPageSize($event)"
+    />
+  </erp-data-grid>
+</div>
+
+<erp-modal
+  [(open)]="modalAbierto"
+  [title]="tituloModal()"
+  (closed)="onCerrarModal()"
+>
+  <form class="form" [formGroup]="form" (ngSubmit)="onGuardar()">
+    <label class="field">
+      <span>Tipo <em class="req">*</em></span>
+      <select formControlName="tipo">
+        @for (t of tiposMovimiento; track t.valor) {
+        <option [value]="t.valor">{{ t.etiqueta }}</option>
+        }
+      </select>
+    </label>
+
+    <label class="field">
+      <span>Nombre <em class="req">*</em></span>
+      <input
+        type="text"
+        formControlName="nombre"
+        [maxlength]="maxNombre"
+        autocomplete="off"
+        placeholder="PAGO A PROVEEDORES"
+      />
+      @if (form.controls.nombre.touched && form.controls.nombre.hasError('required')) {
+      <small class="field__error">El nombre es obligatorio.</small>
+      }
+    </label>
+
+    <label class="field">
+      <span>Abreviatura</span>
+      <input
+        type="text"
+        formControlName="abreviatura"
+        [maxlength]="maxAbreviatura"
+        autocomplete="off"
+        placeholder="PPROV"
+      />
+    </label>
+
+    <label class="field">
+      <span>Requiere</span>
+      <input
+        type="text"
+        formControlName="requiere"
+        [maxlength]="maxRequiere"
+        autocomplete="off"
+        placeholder="SUBDPTO"
+      />
+    </label>
+
+    <!-- El legacy ofrece un solo valor en un desplegable; aquí es texto libre porque la
+         columna no tiene check y acotarla dejaría fuera cualquier opción futura. -->
+    <p class="form__nota">
+      «Requiere» dice qué hace falta para registrar el movimiento. El legacy usa
+      hoy un único valor: SUBDPTO.
+    </p>
+
+    <!-- Sin estructura ni cuentas contables: el formulario del legacy las dejó de mostrar y
+         el backend las conserva solas. Sin estado ni mes/año: se alternan desde la grilla. -->
+    <p class="form__nota">
+      El estado y «mes/año» se cambian desde el listado, pulsando su etiqueta.
+    </p>
+
+    <button type="submit" hidden></button>
+  </form>
+
+  <div modalFooter>
+    <button type="button" class="btn btn--ghost" (click)="onCerrarModal()">
+      Cancelar
+    </button>
+    <button
+      type="button"
+      class="btn"
+      [disabled]="guardando()"
+      (click)="onGuardar()"
+    >
+      {{ guardando() ? 'Guardando…' : 'Guardar' }}
+    </button>
+  </div>
+</erp-modal>

@@ -1,0 +1,16 @@
+{
+  "name": "basic-feature-tipos-tributo",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/basic/feature-tipos-tributo/src",
+  "prefix": "erp",
+  "projectType": "library",
+  "tags": [
+    "scope:basic",
+    "type:feature"
+  ],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

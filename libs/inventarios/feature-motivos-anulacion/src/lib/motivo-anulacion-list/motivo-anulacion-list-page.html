@@ -1,0 +1,206 @@
+<div class="motivos-anulacion">
+  <!-- Sin breadcrumbs ni subtítulo: la cabecera repetía el nombre de la pantalla y se comía
+       una franja de alto que la grilla aprovecha mejor. -->
+  <erp-page-header title="Motivos de anulación" [breadcrumbs]="false">
+    <button
+      headerActions
+      type="button"
+      class="btn-cerrar"
+      title="Volver"
+      aria-label="Volver"
+      (click)="onCerrar()"
+    >
+      <erp-icon name="close" />
+    </button>
+  </erp-page-header>
+
+  <erp-filter-panel [head]="false">
+    <div class="filter-fields" [formGroup]="filters">
+      <label class="field field--search">
+        <span>Buscar</span>
+        <input
+          type="text"
+          formControlName="q"
+          placeholder="Nombre, abreviatura o código…"
+          (keyup.enter)="onApply()"
+        />
+      </label>
+
+      <label class="field">
+        <span>Estado</span>
+        <select formControlName="estado">
+          <option value="">Todos</option>
+          <option value="Y">Activos</option>
+          <option value="N">Inactivos</option>
+        </select>
+      </label>
+
+      <div class="field field--action">
+        <button type="button" class="btn" (click)="onApply()">
+          <erp-icon name="search" /> Buscar
+        </button>
+      </div>
+    </div>
+
+    <!-- Solo Exportar: este recurso no tiene reporte PDF, así que tampoco menú Imprimir. -->
+    <div filterActions>
+      <erp-export-menu (exportar)="onExportar($event)" />
+      @if (seleccionadas().length) {
+      <button
+        type="button"
+        class="btn btn--danger"
+        (click)="onEliminarSeleccionadas()"
+      >
+        <erp-icon name="trash" /> Eliminar ({{ seleccionadas().length }})
+      </button>
+      }
+      <button type="button" class="btn" (click)="onNuevo()">
+        <erp-icon name="plus" /> Nuevo
+      </button>
+    </div>
+  </erp-filter-panel>
+
+  @if (error(); as err) {
+  <div class="alert-error alert-error--box">{{ err }}</div>
+  }
+
+  <!-- El arrastre se apaga mientras haya filtro activo: la grilla emitiría solo las filas
+       visibles, y renumerarlas desde 1 machacaría el orden de las ocultas. -->
+  <erp-data-grid
+    [columns]="columns"
+    [rows]="rowsPagina()"
+    [loading]="loading()"
+    [selectable]="true"
+    [reorderable]="!filtrando()"
+    (selectionChange)="onSeleccion($event)"
+    (rowReorder)="onReorder($event)"
+  >
+
+    <ng-template [erpCell]="'abreviatura'" let-row>
+      @if (row.abreviatura) { {{ row.abreviatura }} } @else { — }
+    </ng-template>
+
+    <ng-template [erpCell]="'codigo_contable'" let-row>
+      @if (row.codigo_contable) { {{ row.codigo_contable }} } @else { — }
+    </ng-template>
+
+    <ng-template [erpCell]="'estado'" let-row>
+      <button
+        type="button"
+        class="badge"
+        [class.badge--on]="row.estado"
+        [class.badge--off]="!row.estado"
+        title="Cambiar estado"
+        (click)="onToggleEstado(row); $event.stopPropagation()"
+      >
+        {{ row.estado ? 'Activo' : 'Inactivo' }}
+      </button>
+    </ng-template>
+
+    <ng-template #rowActions let-row>
+      <button
+        type="button"
+        class="grid-action"
+        title="Editar"
+        (click)="onEditar(row)"
+      >
+        <erp-icon name="edit" />
+      </button>
+      <button
+        type="button"
+        class="grid-action grid-action--danger"
+        title="Eliminar"
+        (click)="onEliminar(row)"
+      >
+        <erp-icon name="trash" />
+      </button>
+    </ng-template>
+
+    <erp-grid-footer
+      gridPagination
+      [meta]="meta()"
+      [pageSizes]="pageSizes"
+      (pageChange)="onPage($event)"
+      (pageSizeChange)="onPageSize($event)"
+    />
+  </erp-data-grid>
+
+  @if (filtrando()) {
+  <p class="hint">
+    El orden no se puede cambiar mientras haya un filtro activo: límpialo para
+    reordenar arrastrando las filas.
+  </p>
+  }
+</div>
+
+<!-- Alta y edición. Mismo formulario para ambas: el backend usa una sola función con un
+     indicador de "nuevo", y los campos que acepta son exactamente estos. -->
+<erp-modal
+  [(open)]="modalAbierto"
+  [title]="tituloModal()"
+  (closed)="onCerrarModal()"
+>
+  <form class="form" [formGroup]="form" (ngSubmit)="onGuardar()">
+
+    <label class="field">
+      <span>Nombre <em class="req">*</em></span>
+      <input
+        type="text"
+        formControlName="nombre"
+        [maxlength]="maxNombre"
+        autocomplete="off"
+        placeholder="ERROR EN EL RUC"
+      />
+      @if (form.controls.nombre.touched && form.controls.nombre.hasError('required')) {
+      <small class="field__error">El nombre es obligatorio.</small>
+      }
+    </label>
+
+    <label class="field">
+      <span>Abreviatura</span>
+      <input
+        type="text"
+        formControlName="abreviatura"
+        [maxlength]="maxAbreviatura"
+        autocomplete="off"
+        placeholder="ERR"
+      />
+    </label>
+
+    <label class="field">
+      <span>Código contable</span>
+      <input
+        type="text"
+        formControlName="codigo_contable"
+        [maxlength]="maxCodigoContable"
+        autocomplete="off"
+        placeholder="01"
+      />
+    </label>
+
+    <!-- Sin campos de orden ni estado: el alta los fija sola y la edición no los toca.
+         Cada uno tiene su propia acción en la grilla. -->
+    <p class="form__nota">
+      El orden y el estado se cambian desde el listado: arrastrando la fila y
+      pulsando su etiqueta de estado.
+    </p>
+
+    <!-- Submit oculto: hace que Enter envíe el formulario, ya que el botón real vive en el
+         pie del modal, fuera del <form>. -->
+    <button type="submit" hidden></button>
+  </form>
+
+  <div modalFooter>
+    <button type="button" class="btn btn--ghost" (click)="onCerrarModal()">
+      Cancelar
+    </button>
+    <button
+      type="button"
+      class="btn"
+      [disabled]="guardando()"
+      (click)="onGuardar()"
+    >
+      {{ guardando() ? 'Guardando…' : 'Guardar' }}
+    </button>
+  </div>
+</erp-modal>

@@ -1,0 +1,16 @@
+{
+  "name": "tesoreria-feature-condiciones-pago",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/tesoreria/feature-condiciones-pago/src",
+  "prefix": "erp",
+  "projectType": "library",
+  "tags": [
+    "scope:tesoreria",
+    "type:feature"
+  ],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

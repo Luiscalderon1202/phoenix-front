@@ -42,6 +42,57 @@
       "@phoenix/basic/feature-tipos-empresa": [
         "./libs/basic/feature-tipos-empresa/src/index.ts"
       ],
+      "@phoenix/basic/feature-tipos-tributo": [
+        "./libs/basic/feature-tipos-tributo/src/index.ts"
+      ],
+      "@phoenix/inventarios/domain": [
+        "./libs/inventarios/domain/src/index.ts"
+      ],
+      "@phoenix/inventarios/data-access": [
+        "./libs/inventarios/data-access/src/index.ts"
+      ],
+      "@phoenix/inventarios/feature-tipos-consumo": [
+        "./libs/inventarios/feature-tipos-consumo/src/index.ts"
+      ],
+      "@phoenix/inventarios/feature-canales-atencion": [
+        "./libs/inventarios/feature-canales-atencion/src/index.ts"
+      ],
+      "@phoenix/inventarios/feature-estados-proceso-pedido": [
+        "./libs/inventarios/feature-estados-proceso-pedido/src/index.ts"
+      ],
+      "@phoenix/basic/feature-tipos-operacion": [
+        "./libs/basic/feature-tipos-operacion/src/index.ts"
+      ],
+      "@phoenix/basic/feature-tipos-venta": [
+        "./libs/basic/feature-tipos-venta/src/index.ts"
+      ],
+      "@phoenix/inventarios/feature-motivos-anulacion": [
+        "./libs/inventarios/feature-motivos-anulacion/src/index.ts"
+      ],
+      "@phoenix/inventarios/feature-motivos-notas": [
+        "./libs/inventarios/feature-motivos-notas/src/index.ts"
+      ],
+      "@phoenix/tesoreria/domain": [
+        "./libs/tesoreria/domain/src/index.ts"
+      ],
+      "@phoenix/tesoreria/data-access": [
+        "./libs/tesoreria/data-access/src/index.ts"
+      ],
+      "@phoenix/tesoreria/feature-condiciones-pago": [
+        "./libs/tesoreria/feature-condiciones-pago/src/index.ts"
+      ],
+      "@phoenix/tesoreria/feature-tipos-forma-pago": [
+        "./libs/tesoreria/feature-tipos-forma-pago/src/index.ts"
+      ],
+      "@phoenix/tesoreria/feature-tipos-tarjeta": [
+        "./libs/tesoreria/feature-tipos-tarjeta/src/index.ts"
+      ],
+      "@phoenix/tesoreria/feature-tipos-descuento": [
+        "./libs/tesoreria/feature-tipos-descuento/src/index.ts"
+      ],
+      "@phoenix/tesoreria/feature-tipos-movimiento-caja": [
+        "./libs/tesoreria/feature-tipos-movimiento-caja/src/index.ts"
+      ],
       "@phoenix/basic/feature-personas": [
         "./libs/basic/feature-personas/src/index.ts"
       ]

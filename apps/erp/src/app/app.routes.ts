@@ -106,6 +106,121 @@ export const appRoutes: Route[] = [
               ),
           },
           {
+            path: 'tipos-tributo',
+            canMatch: [procesoGuard('TABLAS-BASICAS')],
+            loadChildren: () =>
+              import('@phoenix/basic/feature-tipos-tributo').then(
+                (m) => m.TIPOS_TRIBUTO_ROUTES,
+              ),
+          },
+          // Los tres siguientes son del dominio `inventarios`, no de `basic`: sus
+          // tablas viven en el esquema `inventarios` y son las que lee la pantalla
+          // de Pedido/Cotización. El proceso de permiso, en cambio, es el mismo —
+          // en el legacy los tres cuelgan del hub TablasBasicas.php.
+          {
+            path: 'tipos-consumo',
+            canMatch: [procesoGuard('TABLAS-BASICAS')],
+            loadChildren: () =>
+              import('@phoenix/inventarios/feature-tipos-consumo').then(
+                (m) => m.TIPOS_CONSUMO_ROUTES,
+              ),
+          },
+          {
+            path: 'canales-atencion',
+            canMatch: [procesoGuard('TABLAS-BASICAS')],
+            loadChildren: () =>
+              import('@phoenix/inventarios/feature-canales-atencion').then(
+                (m) => m.CANALES_ATENCION_ROUTES,
+              ),
+          },
+          {
+            path: 'estados-proceso-pedido',
+            canMatch: [procesoGuard('TABLAS-BASICAS')],
+            loadChildren: () =>
+              import('@phoenix/inventarios/feature-estados-proceso-pedido').then(
+                (m) => m.ESTADOS_PROCESO_PEDIDO_ROUTES,
+              ),
+          },
+          {
+            path: 'tipos-operacion',
+            canMatch: [procesoGuard('TABLAS-BASICAS')],
+            loadChildren: () =>
+              import('@phoenix/basic/feature-tipos-operacion').then(
+                (m) => m.TIPOS_OPERACION_ROUTES,
+              ),
+          },
+          {
+            path: 'tipos-venta',
+            canMatch: [procesoGuard('TABLAS-BASICAS')],
+            loadChildren: () =>
+              import('@phoenix/basic/feature-tipos-venta').then(
+                (m) => m.TIPOS_VENTA_ROUTES,
+              ),
+          },
+          {
+            path: 'motivos-anulacion',
+            canMatch: [procesoGuard('TABLAS-BASICAS')],
+            loadChildren: () =>
+              import('@phoenix/inventarios/feature-motivos-anulacion').then(
+                (m) => m.MOTIVOS_ANULACION_ROUTES,
+              ),
+          },
+          {
+            path: 'motivos-notas',
+            canMatch: [procesoGuard('TABLAS-BASICAS')],
+            loadChildren: () =>
+              import('@phoenix/inventarios/feature-motivos-notas').then(
+                (m) => m.MOTIVOS_NOTAS_ROUTES,
+              ),
+          },
+          // Grupo "Tesorería" del hub. Los cuatro primeros van con TABLAS-BASICAS;
+          // el quinto NO — ver su comentario.
+          {
+            path: 'condiciones-pago',
+            canMatch: [procesoGuard('TABLAS-BASICAS')],
+            loadChildren: () =>
+              import('@phoenix/tesoreria/feature-condiciones-pago').then(
+                (m) => m.CONDICIONES_PAGO_ROUTES,
+              ),
+          },
+          {
+            path: 'tipos-forma-pago',
+            canMatch: [procesoGuard('TABLAS-BASICAS')],
+            loadChildren: () =>
+              import('@phoenix/tesoreria/feature-tipos-forma-pago').then(
+                (m) => m.TIPOS_FORMA_PAGO_ROUTES,
+              ),
+          },
+          {
+            path: 'tipos-tarjeta',
+            canMatch: [procesoGuard('TABLAS-BASICAS')],
+            loadChildren: () =>
+              import('@phoenix/tesoreria/feature-tipos-tarjeta').then(
+                (m) => m.TIPOS_TARJETA_ROUTES,
+              ),
+          },
+          {
+            path: 'tipos-descuento',
+            canMatch: [procesoGuard('TABLAS-BASICAS')],
+            loadChildren: () =>
+              import('@phoenix/tesoreria/feature-tipos-descuento').then(
+                (m) => m.TIPOS_DESCUENTO_ROUTES,
+              ),
+          },
+          {
+            path: 'tipos-movimiento-caja',
+            // ⚠ TIPMOVCAJA, no TABLAS-BASICAS. Esta pantalla cuelga del mismo hub
+            // que las cuatro de arriba pero tiene permiso propio: TipMovCaj.php
+            // declara `$segProcesoMenu=array("TIPMOVCAJA")` y sus stored procedures
+            // comprueban ese mismo proceso. Copiar aquí el del hub la abriría a
+            // quien no la tiene concedida.
+            canMatch: [procesoGuard('TIPMOVCAJA')],
+            loadChildren: () =>
+              import('@phoenix/tesoreria/feature-tipos-movimiento-caja').then(
+                (m) => m.TIPOS_MOVIMIENTO_CAJA_ROUTES,
+              ),
+          },
+          {
             path: 'personas',
             // `procesoGuard` y no `permissionGuard`: en Phoenix la unidad de
             // permiso es `basic.menuweb.proceso`, no el par (menuid, acción) de

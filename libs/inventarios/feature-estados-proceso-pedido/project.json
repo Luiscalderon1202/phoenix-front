@@ -1,0 +1,16 @@
+{
+  "name": "inventarios-feature-estados-proceso-pedido",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/inventarios/feature-estados-proceso-pedido/src",
+  "prefix": "erp",
+  "projectType": "library",
+  "tags": [
+    "scope:inventarios",
+    "type:feature"
+  ],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

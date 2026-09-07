@@ -1,0 +1,16 @@
+{
+  "name": "tesoreria-feature-tipos-tarjeta",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/tesoreria/feature-tipos-tarjeta/src",
+  "prefix": "erp",
+  "projectType": "library",
+  "tags": [
+    "scope:tesoreria",
+    "type:feature"
+  ],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

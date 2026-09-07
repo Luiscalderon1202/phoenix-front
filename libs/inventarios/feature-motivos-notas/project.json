@@ -1,0 +1,16 @@
+{
+  "name": "inventarios-feature-motivos-notas",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/inventarios/feature-motivos-notas/src",
+  "prefix": "erp",
+  "projectType": "library",
+  "tags": [
+    "scope:inventarios",
+    "type:feature"
+  ],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

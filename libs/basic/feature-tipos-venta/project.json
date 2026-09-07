@@ -1,0 +1,16 @@
+{
+  "name": "basic-feature-tipos-venta",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/basic/feature-tipos-venta/src",
+  "prefix": "erp",
+  "projectType": "library",
+  "tags": [
+    "scope:basic",
+    "type:feature"
+  ],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

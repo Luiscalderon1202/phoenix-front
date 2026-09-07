@@ -5,3 +5,6 @@ export * from './lib/tipo-telefono.model';
 export * from './lib/tipo-email.model';
 export * from './lib/tipo-social-media.model';
 export * from './lib/tipo-direccion.model';
+export * from './lib/tipo-tributo.model';
+export * from './lib/tipo-operacion.model';
+export * from './lib/tipo-venta.model';

@@ -1,0 +1,16 @@
+{
+  "name": "inventarios-data-access",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/inventarios/data-access/src",
+  "prefix": "erp",
+  "projectType": "library",
+  "tags": [
+    "scope:inventarios",
+    "type:data-access"
+  ],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

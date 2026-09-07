@@ -5,3 +5,6 @@ export * from './lib/tipo-telefono.api';
 export * from './lib/tipo-email.api';
 export * from './lib/tipo-social-media.api';
 export * from './lib/tipo-direccion.api';
+export * from './lib/tipo-tributo.api';
+export * from './lib/tipo-operacion.api';
+export * from './lib/tipo-venta.api';
