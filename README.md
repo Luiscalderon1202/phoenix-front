@@ -98,11 +98,4 @@ El proyecto sigue una **arquitectura por capas** dentro del monorepo:
 - **`util`** → Funciones auxiliares sin dependencia de Angular
 - **`auth`** → Manejo de sesión, guards, interceptors de autenticación
 
-### Rutas Principales
 
-| Ruta                       | Descripción                  |
-| -------------------------- | ---------------------------- |
-| `/login`                   | Inicio de sesión             |
-| `/cambiar-clave`           | Cambio de contraseña         |
-| `/inicio`                  | Dashboard principal          |
-| `/mantenimiento/personas`  | Gestión de personas          |
