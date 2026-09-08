@@ -1,0 +1,153 @@
+<div class="laboratorios">
+  <!-- Sin breadcrumbs ni subtítulo: la migaja repetía el título y el subtítulo describía lo
+       evidente. Esa franja se la queda la grilla, que es lo que se viene a mirar. -->
+  <erp-page-header title="Laboratorios" [breadcrumbs]="false">
+    <button
+      headerActions
+      type="button"
+      class="btn-cerrar"
+      title="Volver"
+      aria-label="Volver"
+      (click)="onCerrar()"
+    >
+      <erp-icon name="close" />
+    </button>
+  </erp-page-header>
+
+  <erp-filter-panel [head]="false">
+    <!-- Un solo filtro: es el único parámetro de búsqueda que acepta `palaboratorio_leer`.
+         Y, a diferencia del legacy, aquí SÍ llega al servidor. -->
+    <div class="filter-fields" [formGroup]="filters">
+      <label class="field field--search">
+        <span>Buscar</span>
+        <input
+          type="text"
+          formControlName="q"
+          placeholder="Nombre del laboratorio…"
+          (keyup.enter)="onApply()"
+        />
+      </label>
+
+      <div class="field field--action">
+        <button type="button" class="btn" (click)="onApply()">
+          <erp-icon name="search" /> Buscar
+        </button>
+      </div>
+    </div>
+
+    <!-- Solo Exportar: este recurso no tiene reporte PDF, así que tampoco menú Imprimir. -->
+    <div filterActions>
+      <erp-export-menu (exportar)="onExportar($event)" />
+      @if (seleccionadas().length) {
+        <button type="button" class="btn btn--danger" (click)="onEliminarSeleccionadas()">
+          <erp-icon name="trash" /> Eliminar ({{ seleccionadas().length }})
+        </button>
+      }
+      <button type="button" class="btn" (click)="onNuevo()">
+        <erp-icon name="plus" /> Nuevo
+      </button>
+    </div>
+  </erp-filter-panel>
+
+  @if (error(); as err) {
+    <div class="alert-error alert-error--box">{{ err }}</div>
+  }
+
+  <!-- `[rows]="rows()"` va directo, sin trocear: la respuesta del backend YA es la página.
+       Sin `[reorderable]`: la tabla no tiene columna `orden`. -->
+  <erp-data-grid
+    [columns]="columns"
+    [rows]="rows()"
+    [loading]="loading()"
+    [selectable]="true"
+    (selectionChange)="onSeleccion($event)"
+  >
+    <ng-template [erpCell]="'abreviatura'" let-row>
+      @if (row.abreviatura) { {{ row.abreviatura }} } @else { — }
+    </ng-template>
+
+    <!-- Conteo de productos: derivado y de solo lectura. Tres formas, como en el legacy
+         (`laboratorio.js:29`): con 0 la celda se deja vacía —un cero repetido 25 veces es ruido—,
+         con 1 se dice con palabras y con más se destaca el número. -->
+    <ng-template [erpCell]="'count_productos'" let-row>
+      @if (row.count_productos > 1) {
+        <span class="badge badge--info badge--conteo">{{ row.count_productos }}</span> productos
+      } @else if (row.count_productos === 1) {
+        Solo un producto
+      } @else {
+        <span class="vacio">—</span>
+      }
+    </ng-template>
+
+    <ng-template #rowActions let-row>
+      <button type="button" class="grid-action" title="Editar" (click)="onEditar(row)">
+        <erp-icon name="edit" />
+      </button>
+      <button
+        type="button"
+        class="grid-action grid-action--danger"
+        title="Eliminar"
+        (click)="onEliminar(row)"
+      >
+        <erp-icon name="trash" />
+      </button>
+    </ng-template>
+
+    <erp-grid-footer
+      gridPagination
+      [meta]="meta()"
+      [pageSizes]="pageSizes"
+      (pageChange)="onPage($event)"
+      (pageSizeChange)="onPageSize($event)"
+    />
+  </erp-data-grid>
+</div>
+
+<!-- Alta y edición. Mismo formulario para ambas: el backend usa una sola función con un
+     indicador de "nuevo", y los campos que acepta son exactamente estos dos. -->
+<erp-modal [(open)]="modalAbierto" [title]="tituloModal()" (closed)="onCerrarModal()">
+  <form class="form" [formGroup]="form" (ngSubmit)="onGuardar()">
+    <label class="field">
+      <span>Nombre <em class="req">*</em></span>
+      <input
+        type="text"
+        formControlName="nombre"
+        [maxlength]="maxNombre"
+        autocomplete="off"
+        placeholder="BAYER"
+      />
+      @if (form.controls.nombre.touched && form.controls.nombre.hasError('required')) {
+        <small class="field__error">El nombre es obligatorio.</small>
+      }
+    </label>
+
+    <!-- `maxlength` de la COLUMNA (varchar(10)), no del formulario del legacy, que promete 20
+         y deja escribir el doble de lo que cabe. -->
+    <label class="field">
+      <span>Abreviatura</span>
+      <input
+        type="text"
+        formControlName="abreviatura"
+        [maxlength]="maxAbreviatura"
+        autocomplete="off"
+        placeholder="BAY"
+      />
+    </label>
+
+    <p class="form__nota">
+      El número de productos es un dato calculado: cuenta los productos que usan el laboratorio y no
+      se puede editar aquí.
+    </p>
+
+    <!-- Submit oculto: hace que Enter envíe el formulario, ya que el botón real vive en el
+         pie del modal, fuera del <form>. -->
+    <button type="submit" hidden></button>
+  </form>
+
+  <div modalFooter>
+    <button type="button" class="btn btn--ghost" (click)="onCerrarModal()">Cancelar</button>
+    <button type="button" class="btn" [disabled]="guardando()" (click)="onGuardar()">
+      {{ guardando() ? 'Guardando…' : 'Guardar' }}
+    </button>
+  </div>
+</erp-modal>

@@ -1,0 +1,16 @@
+{
+  "name": "catalogo-feature-laboratorios",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/catalogo/feature-laboratorios/src",
+  "prefix": "erp",
+  "projectType": "library",
+  "tags": [
+    "scope:catalogo",
+    "type:feature"
+  ],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

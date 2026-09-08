@@ -1,0 +1,16 @@
+{
+  "name": "catalogo-feature-unidades-medida",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/catalogo/feature-unidades-medida/src",
+  "prefix": "erp",
+  "projectType": "library",
+  "tags": [
+    "scope:catalogo",
+    "type:feature"
+  ],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

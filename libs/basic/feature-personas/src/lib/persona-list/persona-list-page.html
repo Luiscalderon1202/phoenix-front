@@ -93,6 +93,9 @@
       <button type="button" class="btn btn--ghost" (click)="onClear()">
         <erp-icon name="refresh" /> Limpiar
       </button>
+      <button type="button" class="btn" (click)="onNueva()">
+        <erp-icon name="plus" /> Nueva
+      </button>
       @if (selected().length) {
         <button type="button" class="btn btn--danger" (click)="onDeleteSelected()">
           <erp-icon name="trash" /> Eliminar ({{ selected().length }})
@@ -149,6 +152,9 @@
     </ng-template>
 
     <ng-template #rowActions let-row>
+      <button type="button" class="grid-action" title="Editar" (click)="onEditar(row)">
+        <erp-icon name="edit" />
+      </button>
       <button
         type="button"
         class="grid-action grid-action--danger"

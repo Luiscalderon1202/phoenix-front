@@ -1,0 +1,388 @@
+<div class="persona-form">
+  <erp-page-header [title]="titulo()" [breadcrumbs]="false">
+    <div headerActions class="cabecera-acciones">
+      @if (esEdicion() && registro()) {
+        <!-- La fecha de alta llega ya formateada por la base (dd/mm/aaaa); no se reinterpreta. -->
+        <span class="registro">Registrada el {{ registro() }}</span>
+      }
+      <button type="button" class="btn btn--ghost" (click)="onCancelar()">Cancelar</button>
+      <button type="button" class="btn" [disabled]="guardando()" (click)="onGuardar()">
+        {{ guardando() ? 'Guardando…' : 'Guardar' }}
+      </button>
+    </div>
+  </erp-page-header>
+
+  @if (errorCarga(); as err) {
+    <div class="alert-error alert-error--box">{{ err }}</div>
+  }
+
+  <erp-form-content [loading]="cargando()" loadingLabel="Cargando la ficha…">
+    <form class="form" [formGroup]="form" (ngSubmit)="onGuardar()">
+      <!-- ── Tipo de persona ───────────────────────────────────────── -->
+      <!-- Decide qué mitad del formulario aplica. Cambiarlo en una persona ya
+           guardada BORRA los datos del otro tipo al guardar: el stored procedure
+           escribe en persona_natural o en persona_juridica y elimina la otra fila. -->
+      <fieldset class="bloque">
+        <legend>Tipo</legend>
+        <div class="opciones">
+          <label class="opcion">
+            <input type="radio" formControlName="tipo" value="N" />
+            <span>Persona natural</span>
+          </label>
+          <label class="opcion">
+            <input type="radio" formControlName="tipo" value="J" />
+            <span>Persona jurídica</span>
+          </label>
+        </div>
+        @if (esEdicion()) {
+          <p class="aviso">
+            Cambiar el tipo borra los datos del otro: una persona natural que pasa a
+            jurídica pierde apellidos, sexo, estado civil y fecha de nacimiento.
+          </p>
+        }
+      </fieldset>
+
+      <!-- ── Identidad ─────────────────────────────────────────────── -->
+      <fieldset class="bloque">
+        <legend>Identidad</legend>
+
+        @if (esNatural()) {
+          <div class="fila">
+            <label class="field field--corto">
+              <span>Título</span>
+              <input type="text" formControlName="titulo" [maxlength]="maxTitulo" autocomplete="off" />
+            </label>
+            <label class="field field--crece">
+              <span>Apellido paterno <em class="req">*</em></span>
+              <input type="text" formControlName="ape_pat" [maxlength]="maxApellido" autocomplete="off" />
+              @if (form.controls.ape_pat.touched && form.controls.ape_pat.hasError('required')) {
+                <small class="field__error">El apellido paterno es obligatorio.</small>
+              }
+            </label>
+            <label class="field field--crece">
+              <span>Apellido materno</span>
+              <input type="text" formControlName="ape_mat" [maxlength]="maxApellido" autocomplete="off" />
+            </label>
+          </div>
+
+          <div class="fila">
+            <label class="field field--crece">
+              <span>Nombres <em class="req">*</em></span>
+              <input type="text" formControlName="nombre" [maxlength]="maxNombre" autocomplete="off" />
+              @if (form.controls.nombre.touched && form.controls.nombre.hasError('required')) {
+                <small class="field__error">El nombre es obligatorio.</small>
+              }
+            </label>
+            <label class="field">
+              <span>Sexo</span>
+              <select formControlName="sexo">
+                <option value="">Sin indicar</option>
+                <option value="M">Masculino</option>
+                <option value="F">Femenino</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Estado civil</span>
+              <select formControlName="est_civil">
+                <option value="">Sin indicar</option>
+                <option value="S">Soltero(a)</option>
+                <option value="C">Casado(a)</option>
+                <option value="V">Viudo(a)</option>
+                <option value="D">Divorciado(a)</option>
+              </select>
+            </label>
+            <!-- ⚠ Obligatoria: la columna del legacy es NOT NULL. -->
+            <label class="field">
+              <span>Nacimiento <em class="req">*</em></span>
+              <input type="date" formControlName="nacimiento" />
+              @if (form.controls.nacimiento.touched && form.controls.nacimiento.hasError('required')) {
+                <small class="field__error">La fecha de nacimiento es obligatoria.</small>
+              }
+            </label>
+          </div>
+        } @else {
+          <div class="fila">
+            <label class="field field--crece">
+              <span>Razón social <em class="req">*</em></span>
+              <input type="text" formControlName="raz_soc" [maxlength]="maxRazSoc" autocomplete="off" />
+              @if (form.controls.raz_soc.touched && form.controls.raz_soc.hasError('required')) {
+                <small class="field__error">La razón social es obligatoria.</small>
+              }
+            </label>
+            <label class="field field--crece">
+              <span>Nombre comercial</span>
+              <input
+                type="text"
+                formControlName="nombre_comercial"
+                [maxlength]="maxNombreComercial"
+                autocomplete="off"
+              />
+            </label>
+          </div>
+        }
+      </fieldset>
+
+      <!-- ── Ubicación ─────────────────────────────────────────────── -->
+      <fieldset class="bloque">
+        <legend>Ubicación</legend>
+
+        <label class="field">
+          <span>Dirección</span>
+          <input type="text" formControlName="direccion" [maxlength]="maxDireccion" autocomplete="off" />
+        </label>
+
+        <div class="fila">
+          <!-- ⚠ El distrito NO es un desplegable: son 1.839 filas y el backend exige
+               acotar la búsqueda. Por eso hay un buscador delante del combo. -->
+          <label class="field field--crece">
+            <span>Buscar distrito</span>
+            <input
+              type="text"
+              autocomplete="off"
+              [placeholder]="'Escriba al menos ' + minBusquedaDistrito + ' letras…'"
+              (input)="onBuscarDistrito($any($event.target).value)"
+            />
+            <small class="field__hint">
+              @if (buscandoDistritos()) { Buscando… } @else {
+                El catálogo tiene 1.839 distritos: hay que acotar la búsqueda.
+              }
+            </small>
+          </label>
+
+          <!-- `div` y no `label`: el control real de erp-combo-search es un <button>
+               dentro del componente, así que un <label> envolvente no puede asociarse. -->
+          <div class="field field--crece">
+            <span>Distrito <em class="req">*</em></span>
+            <erp-combo-search
+              formControlName="distritoid"
+              [items]="opcionesDistrito()"
+              bindValue="distritoid"
+              bindLabel="etiqueta"
+              bindSearch="nombre"
+              placeholder="Seleccionar distrito…"
+              [clearable]="false"
+            />
+            @if (form.controls.distritoid.touched && form.controls.distritoid.invalid) {
+              <small class="field__error">Seleccione un distrito.</small>
+            }
+          </div>
+
+          <div class="field">
+            <span>País <em class="req">*</em></span>
+            <erp-combo-search
+              formControlName="paisid"
+              [items]="paises()"
+              bindValue="paisid"
+              bindLabel="nombre"
+              placeholder="Seleccionar país…"
+              [clearable]="false"
+            />
+            @if (form.controls.paisid.touched && form.controls.paisid.invalid) {
+              <small class="field__error">Seleccione un país.</small>
+            }
+          </div>
+        </div>
+      </fieldset>
+
+      <!-- ── Documentos de identidad ───────────────────────────────── -->
+      <!-- Una persona puede tener varios (DNI y RUC, por ejemplo). Se guardan por
+           reemplazo: lo que no quede en la lista se borra. -->
+      <fieldset class="bloque" formArrayName="documentos">
+        <legend>
+          Documentos de identidad
+          <button type="button" class="btn btn--sm" (click)="agregarDocumento()">
+            <erp-icon name="plus" /> Añadir
+          </button>
+        </legend>
+
+        @if (!documentos.length) {
+          <p class="vacio">Sin documentos registrados.</p>
+        }
+        @for (doc of documentos.controls; track $index) {
+          <div class="fila fila--lista" [formGroupName]="$index">
+            <label class="field">
+              <span>Tipo <em class="req">*</em></span>
+              <select formControlName="tipoid">
+                <option [value]="0">Seleccione…</option>
+                @for (t of tiposID(); track t.tipoid) {
+                  <option [value]="t.tipoid">{{ t.nombre }}</option>
+                }
+              </select>
+            </label>
+            <label class="field field--crece">
+              <span>Número <em class="req">*</em></span>
+              <input type="text" formControlName="numero" autocomplete="off" />
+            </label>
+            <button
+              type="button"
+              class="btn-quitar"
+              title="Quitar"
+              (click)="quitar(documentos, $index)"
+            >
+              <erp-icon name="trash" />
+            </button>
+          </div>
+        }
+      </fieldset>
+
+      <!-- ── Teléfonos ─────────────────────────────────────────────── -->
+      <fieldset class="bloque" formArrayName="telefonos">
+        <legend>
+          Teléfonos
+          <button type="button" class="btn btn--sm" (click)="agregarTelefono()">
+            <erp-icon name="plus" /> Añadir
+          </button>
+        </legend>
+
+        @if (!telefonos.length) {
+          <p class="vacio">Sin teléfonos registrados.</p>
+        }
+        @for (tel of telefonos.controls; track $index) {
+          <div class="fila fila--lista" [formGroupName]="$index">
+            <label class="field">
+              <span>Tipo <em class="req">*</em></span>
+              <select formControlName="tipoid">
+                <option [value]="0">Seleccione…</option>
+                @for (t of tiposTelefono(); track t.tipoid) {
+                  <option [value]="t.tipoid">{{ t.nombre }}</option>
+                }
+              </select>
+            </label>
+            <label class="field">
+              <span>Número <em class="req">*</em></span>
+              <input type="text" formControlName="numero" autocomplete="off" />
+            </label>
+            <label class="field field--crece">
+              <span>Referencia</span>
+              <input type="text" formControlName="nombre" autocomplete="off" />
+            </label>
+            <label class="check">
+              <input type="checkbox" formControlName="main" />
+              <span>Principal</span>
+            </label>
+            <label class="check">
+              <input type="checkbox" formControlName="publico" />
+              <span>Público</span>
+            </label>
+            <button
+              type="button"
+              class="btn-quitar"
+              title="Quitar"
+              (click)="quitar(telefonos, $index)"
+            >
+              <erp-icon name="trash" />
+            </button>
+          </div>
+        }
+      </fieldset>
+
+      <!-- ── Emails ────────────────────────────────────────────────── -->
+      <fieldset class="bloque" formArrayName="emails">
+        <legend>
+          Emails
+          <button type="button" class="btn btn--sm" (click)="agregarEmail()">
+            <erp-icon name="plus" /> Añadir
+          </button>
+        </legend>
+
+        @if (!emails.length) {
+          <p class="vacio">Sin emails registrados.</p>
+        }
+        @for (mail of emails.controls; track $index) {
+          <div class="fila fila--lista" [formGroupName]="$index">
+            <label class="field">
+              <span>Tipo <em class="req">*</em></span>
+              <select formControlName="tipoid">
+                <option [value]="0">Seleccione…</option>
+                @for (t of tiposEmail(); track t.tipoid) {
+                  <option [value]="t.tipoid">{{ t.nombre }}</option>
+                }
+              </select>
+            </label>
+            <label class="field field--crece">
+              <span>Email <em class="req">*</em></span>
+              <input type="text" formControlName="email" autocomplete="off" />
+              @if (mail.get('email')?.touched && mail.get('email')?.hasError('email')) {
+                <small class="field__error">El email no es válido.</small>
+              }
+            </label>
+            <label class="check">
+              <input type="checkbox" formControlName="main" />
+              <span>Principal</span>
+            </label>
+            <label class="check">
+              <input type="checkbox" formControlName="publico" />
+              <span>Público</span>
+            </label>
+            <button type="button" class="btn-quitar" title="Quitar" (click)="quitar(emails, $index)">
+              <erp-icon name="trash" />
+            </button>
+          </div>
+        }
+      </fieldset>
+
+      <!-- ── Redes sociales ────────────────────────────────────────── -->
+      <fieldset class="bloque" formArrayName="redes">
+        <legend>
+          Redes sociales
+          <button type="button" class="btn btn--sm" (click)="agregarRed()">
+            <erp-icon name="plus" /> Añadir
+          </button>
+        </legend>
+
+        @if (!redes.length) {
+          <p class="vacio">Sin redes registradas.</p>
+        }
+        @for (red of redes.controls; track $index) {
+          <div class="fila fila--lista" [formGroupName]="$index">
+            <label class="field">
+              <span>Red <em class="req">*</em></span>
+              <select formControlName="tipoid">
+                <option [value]="0">Seleccione…</option>
+                @for (t of tiposRed(); track t.tipoid) {
+                  <option [value]="t.tipoid">{{ t.nombre }}</option>
+                }
+              </select>
+            </label>
+            <label class="field field--crece">
+              <span>Usuario <em class="req">*</em></span>
+              <input type="text" formControlName="usuario" autocomplete="off" />
+            </label>
+            <button type="button" class="btn-quitar" title="Quitar" (click)="quitar(redes, $index)">
+              <erp-icon name="trash" />
+            </button>
+          </div>
+        }
+      </fieldset>
+
+      <!-- ── Roles ─────────────────────────────────────────────────── -->
+      <!-- Se guardan por reemplazo, como el resto: desmarcarlos todos deja a la
+           persona sin roles. -->
+      <fieldset class="bloque">
+        <legend>Roles</legend>
+        <div class="roles">
+          @for (rol of roles(); track rol.rolid) {
+            <label class="check check--rol">
+              <input
+                type="checkbox"
+                [checked]="tieneRol(rol.rolid)"
+                (change)="alternarRol(rol.rolid)"
+              />
+              <span>{{ rol.nombre }}</span>
+            </label>
+          } @empty {
+            <p class="vacio">No hay roles configurados.</p>
+          }
+        </div>
+      </fieldset>
+
+      <p class="form__nota">
+        El estado se cambia desde el listado y la foto tiene su propia pantalla en el
+        sistema anterior; ninguno de los dos se edita aquí.
+      </p>
+
+      <!-- Submit oculto: hace que Enter envíe el formulario. -->
+      <button type="submit" hidden></button>
+    </form>
+  </erp-form-content>
+</div>

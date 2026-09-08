@@ -8,6 +8,7 @@ import {
   signal,
 } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { PersonaApi, RolApi } from '@phoenix/basic/data-access';
 import type {
@@ -257,6 +258,19 @@ export class PersonaListPage {
   }
 
   // ── Eliminación ─────────────────────────────────────────────────────
+  // ── Alta y edición ──────────────────────────────────────────────────
+  // Son PÁGINA PROPIA, no un modal: el formulario tiene dos variantes según el tipo de
+  // persona y cuatro listas dinámicas más los roles.
+  private readonly router = inject(Router);
+
+  protected onNueva(): void {
+    void this.router.navigate(['/mantenimiento/personas/nueva']);
+  }
+
+  protected onEditar(row: PersonaListRow): void {
+    void this.router.navigate(['/mantenimiento/personas', row.personaid]);
+  }
+
   protected async onDelete(row: PersonaListRow): Promise<void> {
     const ok = await this.confirm.ask({
       title: 'Eliminar persona',

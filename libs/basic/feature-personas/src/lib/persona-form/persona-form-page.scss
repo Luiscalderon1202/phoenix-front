@@ -1,0 +1,216 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+.persona-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+  height: 100%;
+}
+
+.persona-form > erp-page-header,
+.persona-form > .alert-error {
+  flex: none;
+}
+
+// El contenido hace su propio scroll: el formulario es largo y la cabecera con los
+// botones de guardar tiene que quedarse a la vista.
+.persona-form > erp-form-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}
+
+.cabecera-acciones {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.registro {
+  font-size: var(--fs-12);
+  color: var(--text-muted);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 0.25rem 0.25rem 1.5rem;
+}
+
+// ── Bloques ───────────────────────────────────────────────────────────
+.bloque {
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-sm, 4px);
+  padding: 0.75rem 1rem 1rem;
+  margin: 0;
+  min-width: 0;
+
+  > legend {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0 0.4rem;
+    font-size: var(--fs-12);
+    font-weight: var(--fw-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+  }
+}
+
+.fila {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.75rem 1rem;
+
+  + .fila {
+    margin-top: 0.75rem;
+  }
+}
+
+// Fila de una lista dinámica: se alinea por la base para que el botón de quitar
+// quede a la altura de los controles, no de sus etiquetas.
+.fila--lista {
+  align-items: flex-end;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px dashed var(--border);
+
+  &:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+  flex: 0 1 200px;
+
+  > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: var(--fs-12);
+    font-weight: var(--fw-semibold);
+    color: var(--text-muted);
+  }
+
+  input,
+  select {
+    padding: 0.45rem 0.6rem;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--r-sm, 4px);
+    background: var(--surface);
+    color: var(--text);
+    font: inherit;
+    min-width: 0;
+  }
+
+  input:focus-visible,
+  select:focus-visible {
+    outline: 2px solid var(--accent, #3b82f6);
+    outline-offset: 1px;
+  }
+}
+
+.field--crece {
+  flex: 1 1 240px;
+}
+
+.field--corto {
+  flex: 0 0 120px;
+}
+
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding-bottom: 0.5rem;
+  font-size: var(--fs-12);
+  white-space: nowrap;
+}
+
+.check--rol {
+  padding: 0.3rem 0.6rem;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-sm, 4px);
+}
+
+.roles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.opciones {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.opcion {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.btn-quitar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin-bottom: 0.25rem;
+  padding: 0;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-sm, 4px);
+  background: var(--surface);
+  color: var(--danger, #dc2626);
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--danger, #dc2626);
+  }
+}
+
+.btn--sm {
+  padding: 0.15rem 0.5rem;
+  font-size: var(--fs-12);
+}
+
+.req {
+  color: var(--danger, #dc2626);
+  font-style: normal;
+}
+
+.field__error {
+  color: var(--danger, #dc2626);
+  font-size: var(--fs-12);
+}
+
+.field__hint,
+.vacio,
+.aviso,
+.form__nota {
+  font-size: var(--fs-12);
+  color: var(--text-muted);
+}
+
+.vacio,
+.aviso,
+.form__nota {
+  margin: 0.4rem 0 0;
+}
+
+@media print {
+  .persona-form > erp-page-header {
+    display: none;
+  }
+}

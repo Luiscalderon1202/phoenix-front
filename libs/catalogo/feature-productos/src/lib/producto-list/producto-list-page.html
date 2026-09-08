@@ -1,0 +1,349 @@
+<div class="productos">
+  <erp-page-header title="Productos" [breadcrumbs]="false">
+    <button
+      headerActions
+      type="button"
+      class="btn-cerrar"
+      title="Volver"
+      aria-label="Volver"
+      (click)="onCerrar()"
+    >
+      <erp-icon name="close" />
+    </button>
+  </erp-page-header>
+
+  <!-- Los ocho filtros son COMPARTIDOS por las dos pestañas y van todos al SERVIDOR, incluido
+       el de estado: aquí los stored procedures sí saben filtrar por él.
+       No hay desplegable de tipo de operación: ese parámetro está muerto en la base. -->
+  <erp-filter-panel [head]="false">
+    <div class="filter-fields" [formGroup]="filters">
+      <label class="field field--search">
+        <span>Buscar</span>
+        <input
+          type="text"
+          formControlName="q"
+          placeholder="Nombre, código de barras, código interno, «ID 12», «MID 4»…"
+          (keyup.enter)="onApply()"
+        />
+      </label>
+
+      <label class="field">
+        <span>Línea</span>
+        <select formControlName="lineaid">
+          <option [value]="0">Todas las líneas</option>
+          @for (l of opcionesLinea(); track l.lineaid) {
+            <option [value]="l.lineaid">{{ l.nombre }}</option>
+          }
+        </select>
+      </label>
+
+      <label class="field">
+        <span>Categoría</span>
+        <select formControlName="categoriaid">
+          <option [value]="0">Todas las categorías</option>
+          @for (c of opcionesCategoria(); track c.categoriaid) {
+            <option [value]="c.categoriaid">{{ c.nombre }}</option>
+          }
+        </select>
+      </label>
+
+      <!-- Encadenada: se recarga en cuanto cambia la categoría, sin esperar a «Buscar». -->
+      <label class="field">
+        <span>Subcategoría</span>
+        <select formControlName="subcategoriaid">
+          <option [value]="0">Todas las subcategorías</option>
+          @for (s of opcionesSubcategoria(); track s.subcategoriaid) {
+            <option [value]="s.subcategoriaid">{{ s.nombre }}</option>
+          }
+        </select>
+      </label>
+
+      <label class="field">
+        <span>Marca</span>
+        <select formControlName="marcaid">
+          <option [value]="0">Todas las marcas</option>
+          @for (m of opcionesMarca(); track m.marcaid) {
+            <option [value]="m.marcaid">{{ m.nombre }}</option>
+          }
+        </select>
+      </label>
+
+      <!-- Solo aplica a la pestaña de productos: la unidad de medida es del producto, no del
+           master, así que el backend de masters ni la acepta. -->
+      @if (pestana() === 'productos') {
+        <label class="field">
+          <span>Unidad de medida</span>
+          <select formControlName="unidadmedidaid">
+            <option [value]="0">Todas las unidades</option>
+            @for (u of opcionesUnidadMedida(); track u.unidadmedidaid) {
+              <option [value]="u.unidadmedidaid">{{ u.nombre }}</option>
+            }
+          </select>
+        </label>
+      }
+
+      <label class="field field--corto">
+        <span>Stock</span>
+        <select formControlName="stock">
+          <option value="">Cualquiera</option>
+          <option value="CONSTOCK">Con stock</option>
+          <option value="SINSTOCK">Sin stock</option>
+          <option value="STOCKNEGATIVO">Stock negativo</option>
+        </select>
+      </label>
+
+      <label class="field field--corto">
+        <span>Estado</span>
+        <select formControlName="estado">
+          <option value="">Todos</option>
+          <option value="Y">Activos</option>
+          <option value="N">Inactivos</option>
+        </select>
+      </label>
+
+      <div class="field field--action">
+        <button type="button" class="btn" (click)="onApply()">
+          <erp-icon name="search" /> Buscar
+        </button>
+      </div>
+      <div class="field field--action">
+        <button type="button" class="btn btn--ghost" (click)="onLimpiar()">Limpiar</button>
+      </div>
+    </div>
+
+    <!-- Solo Exportar: esta pantalla no crea ni edita —el editor es otro tramo—, así que no hay
+         botón «Nuevo». Y no tiene reporte PDF. -->
+    <div filterActions>
+      <erp-export-menu (exportar)="onExportar($event)" />
+      @if (pestana() === 'productos' && seleccionProductos().length) {
+        <button type="button" class="btn btn--danger" (click)="onEliminarProductosSeleccionados()">
+          <erp-icon name="trash" /> Eliminar ({{ seleccionProductos().length }})
+        </button>
+      }
+      @if (pestana() === 'masters' && seleccionMasters().length) {
+        <button type="button" class="btn btn--danger" (click)="onEliminarMastersSeleccionados()">
+          <erp-icon name="trash" /> Eliminar ({{ seleccionMasters().length }})
+        </button>
+      }
+    </div>
+  </erp-filter-panel>
+
+  <!-- Las dos pestañas de Producto.php. Comparten filtros y permiso; cada una lleva su propia
+       página, como el legacy. -->
+  <div class="tabs" role="tablist">
+    <button
+      type="button"
+      role="tab"
+      class="tabs__tab"
+      [class.tabs__tab--activa]="pestana() === 'productos'"
+      [attr.aria-selected]="pestana() === 'productos'"
+      (click)="onPestana('productos')"
+    >
+      <erp-icon name="list" /> Productos detallados
+      @if (metaProductos().total) {
+        <span class="tabs__cuenta">{{ metaProductos().total }}</span>
+      }
+    </button>
+    <button
+      type="button"
+      role="tab"
+      class="tabs__tab"
+      [class.tabs__tab--activa]="pestana() === 'masters'"
+      [attr.aria-selected]="pestana() === 'masters'"
+      (click)="onPestana('masters')"
+    >
+      <erp-icon name="list" /> Productos master
+      @if (metaMasters().total) {
+        <span class="tabs__cuenta">{{ metaMasters().total }}</span>
+      }
+    </button>
+  </div>
+
+  @if (pestana() === 'productos') {
+    @if (errorProductos(); as err) {
+      <div class="alert-error alert-error--box">{{ err }}</div>
+    }
+
+    <!-- Sin `[reorderable]`: estas tablas no tienen columna `orden`. -->
+    <erp-data-grid
+      [columns]="columnasProductos"
+      [rows]="rowsProductos()"
+      [loading]="cargandoProductos()"
+      [selectable]="true"
+      (selectionChange)="onSeleccionProductos($event)"
+    >
+      <ng-template [erpCell]="'stock'" let-row>
+        <span [class.negativo]="row.stock.startsWith('-')">{{ row.stock }}</span>
+      </ng-template>
+
+      <ng-template [erpCell]="'subcategoria_nombre'" let-row>
+        @if (row.subcategoria_nombre) { {{ row.subcategoria_nombre }} } @else { — }
+      </ng-template>
+
+      <ng-template [erpCell]="'estado'" let-row>
+        <button
+          type="button"
+          class="badge"
+          [class.badge--on]="row.estado"
+          [class.badge--off]="!row.estado"
+          title="Cambiar estado"
+          (click)="onToggleProducto(row); $event.stopPropagation()"
+        >
+          {{ row.estado ? 'Activo' : 'Inactivo' }}
+        </button>
+      </ng-template>
+
+      <!-- Sin acción de editar: el editor es otro tramo. Mover de master sí, que es una de las
+           ocho operaciones de la pantalla del legacy. -->
+      <ng-template #rowActions let-row>
+        <button
+          type="button"
+          class="grid-action"
+          title="Mover a otro master"
+          (click)="onAbrirMover(row)"
+        >
+          <erp-icon name="edit" />
+        </button>
+        <button
+          type="button"
+          class="grid-action grid-action--danger"
+          title="Eliminar"
+          (click)="onEliminarProducto(row)"
+        >
+          <erp-icon name="trash" />
+        </button>
+      </ng-template>
+
+      <erp-grid-footer
+        gridPagination
+        [meta]="metaProductos()"
+        [pageSizes]="pageSizes"
+        (pageChange)="onPageProductos($event)"
+        (pageSizeChange)="onPageSize($event)"
+      />
+    </erp-data-grid>
+  } @else {
+    @if (errorMasters(); as err) {
+      <div class="alert-error alert-error--box">{{ err }}</div>
+    }
+
+    <erp-data-grid
+      [columns]="columnasMasters"
+      [rows]="rowsMasters()"
+      [loading]="cargandoMasters()"
+      [selectable]="true"
+      (selectionChange)="onSeleccionMasters($event)"
+    >
+      <ng-template [erpCell]="'abreviatura'" let-row>
+        @if (row.abreviatura) { {{ row.abreviatura }} } @else { — }
+      </ng-template>
+
+      <ng-template [erpCell]="'stock'" let-row>
+        <span [class.negativo]="row.stock.startsWith('-')">{{ row.stock }}</span>
+      </ng-template>
+
+      <!-- Contador calculado en vivo por el backend, no la columna desnormalizada de la tabla. -->
+      <ng-template [erpCell]="'cantidad_productos'" let-row>
+        @if (row.cantidad_productos > 1) {
+          <span class="badge badge--info badge--conteo">{{ row.cantidad_productos }}</span> productos
+        } @else if (row.cantidad_productos === 1) {
+          Solo un producto
+        } @else {
+          <span class="vacio">—</span>
+        }
+      </ng-template>
+
+      <ng-template [erpCell]="'estado'" let-row>
+        <button
+          type="button"
+          class="badge"
+          [class.badge--on]="row.estado"
+          [class.badge--off]="!row.estado"
+          title="Cambiar estado"
+          (click)="onToggleMaster(row); $event.stopPropagation()"
+        >
+          {{ row.estado ? 'Activo' : 'Inactivo' }}
+        </button>
+      </ng-template>
+
+      <ng-template #rowActions let-row>
+        <button
+          type="button"
+          class="grid-action grid-action--danger"
+          title="Eliminar"
+          (click)="onEliminarMaster(row)"
+        >
+          <erp-icon name="trash" />
+        </button>
+      </ng-template>
+
+      <erp-grid-footer
+        gridPagination
+        [meta]="metaMasters()"
+        [pageSizes]="pageSizes"
+        (pageChange)="onPageMasters($event)"
+        (pageSizeChange)="onPageSize($event)"
+      />
+    </erp-data-grid>
+  }
+
+  <p class="hint">
+    Esta pantalla administra el catálogo: buscar, activar, desactivar, eliminar y mover un
+    producto de master. Crear y editar productos sigue en el sistema anterior.
+  </p>
+</div>
+
+<!-- Mover de master. El buscador es aparte de los filtros de la pantalla: se busca entre TODOS
+     los masters, no entre los que la grilla esté mostrando. -->
+<erp-modal [(open)]="moverAbierto" title="Mover a otro master" (closed)="onCerrarMover()">
+  @if (productoAMover(); as row) {
+    <div class="mover">
+      <p class="mover__producto">
+        <strong>{{ row.nombre }}</strong>
+        <span class="mover__actual">Master actual: {{ row.masterid }}</span>
+      </p>
+
+      <label class="field">
+        <span>Buscar master</span>
+        <input
+          type="text"
+          [value]="buscarMaster()"
+          placeholder="Nombre o abreviatura del master…"
+          autocomplete="off"
+          (input)="onBuscarMaster($any($event.target).value)"
+        />
+      </label>
+
+      <label class="field">
+        <span>Master destino <em class="req">*</em></span>
+        <select [value]="masterDestino()" (change)="onElegirMaster($any($event.target).value)">
+          <option [value]="0">Elija un master…</option>
+          @for (m of candidatosMaster(); track m.masterid) {
+            <option [value]="m.masterid">{{ m.masterid }} · {{ m.nombre }}</option>
+          }
+        </select>
+        @if (!candidatosMaster().length) {
+          <small class="field__error">Ningún master coincide con la búsqueda.</small>
+        }
+      </label>
+
+      <!-- Aviso que no es opcional: es lo que hace el backend y sorprende. -->
+      <p class="form__nota">
+        Al mover el producto cambia su <strong>nombre visible</strong>, porque se compone con el
+        nombre del master. Su presentación —«AZUL», «500ML»— se conserva.
+      </p>
+    </div>
+  }
+
+  <div modalFooter>
+    <button type="button" class="btn btn--ghost" (click)="onCerrarMover()">Cancelar</button>
+    <button
+      type="button"
+      class="btn"
+      [disabled]="moviendo() || !masterDestino()"
+      (click)="onConfirmarMover()"
+    >
+      {{ moviendo() ? 'Moviendo…' : 'Mover' }}
+    </button>
+  </div>
+</erp-modal>

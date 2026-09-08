@@ -1,0 +1,173 @@
+<div class="categorias">
+  <!-- Sin breadcrumbs ni subtítulo: la cabecera repetía el nombre de la pantalla y se comía
+       una franja de alto que la grilla aprovecha mejor. -->
+  <erp-page-header title="Categorías" [breadcrumbs]="false">
+    <button
+      headerActions
+      type="button"
+      class="btn-cerrar"
+      title="Volver"
+      aria-label="Volver"
+      (click)="onCerrar()"
+    >
+      <erp-icon name="close" />
+    </button>
+  </erp-page-header>
+
+  <!-- El filtro por nombre va al SERVIDOR (`?q=`), como en el legacy: pulsar Buscar recarga el
+       recurso. La paginación, en cambio, es de cliente: el endpoint no pagina. -->
+  <erp-filter-panel [head]="false">
+    <div class="filter-fields" [formGroup]="filters">
+      <label class="field field--search">
+        <span>Buscar</span>
+        <input
+          type="text"
+          formControlName="q"
+          placeholder="Nombre…"
+          (keyup.enter)="onApply()"
+        />
+      </label>
+
+      <div class="field field--action">
+        <button type="button" class="btn" (click)="onApply()">
+          <erp-icon name="search" /> Buscar
+        </button>
+      </div>
+    </div>
+
+    <!-- Solo Exportar: este recurso no tiene reporte PDF, así que tampoco menú Imprimir. -->
+    <div filterActions>
+      <erp-export-menu (exportar)="onExportar($event)" />
+      @if (seleccionadas().length) {
+      <button
+        type="button"
+        class="btn btn--danger"
+        (click)="onEliminarSeleccionadas()"
+      >
+        <erp-icon name="trash" /> Eliminar ({{ seleccionadas().length }})
+      </button>
+      }
+      <button type="button" class="btn" (click)="onNuevo()">
+        <erp-icon name="plus" /> Nuevo
+      </button>
+    </div>
+  </erp-filter-panel>
+
+  @if (error(); as err) {
+  <div class="alert-error alert-error--box">{{ err }}</div>
+  }
+
+  <!-- Sin `reorderable` ni columna de estado: `catalogo.categoria` son tres columnas. -->
+  <erp-data-grid
+    [columns]="columns"
+    [rows]="rowsPagina()"
+    [loading]="loading()"
+    [selectable]="true"
+    (selectionChange)="onSeleccion($event)"
+  >
+    <ng-template [erpCell]="'abreviatura'" let-row>
+      @if (row.abreviatura) { {{ row.abreviatura }} } @else { — }
+    </ng-template>
+
+    <!-- El enlace padre → hijo. En el legacy (`categoria.js:53`) es un botón «SC» que abre
+         `SubCategoria.php?categoriaid=<id>`; aquí es un routerLink al mantenimiento de
+         subcategorías, que lee ese `categoriaid` de los query params y se filtra por él.
+         Apagado cuando la categoría todavía no tiene ninguna. -->
+    <ng-template [erpCell]="'cantidad_subcategorias'" let-row>
+      <a
+        class="sc-link"
+        [class.sc-link--vacio]="!row.cantidad_subcategorias"
+        routerLink="/mantenimiento/subcategorias"
+        [queryParams]="{ categoriaid: row.categoriaid }"
+        title="Ver las subcategorías de esta categoría"
+        (click)="$event.stopPropagation()"
+      >{{ row.cantidad_subcategorias }}</a>
+    </ng-template>
+
+    <ng-template #rowActions let-row>
+      <button
+        type="button"
+        class="grid-action"
+        title="Editar"
+        (click)="onEditar(row)"
+      >
+        <erp-icon name="edit" />
+      </button>
+      <button
+        type="button"
+        class="grid-action grid-action--danger"
+        title="Eliminar"
+        (click)="onEliminar(row)"
+      >
+        <erp-icon name="trash" />
+      </button>
+    </ng-template>
+
+    <erp-grid-footer
+      gridPagination
+      [meta]="meta()"
+      [pageSizes]="pageSizes"
+      (pageChange)="onPage($event)"
+      (pageSizeChange)="onPageSize($event)"
+    />
+  </erp-data-grid>
+</div>
+
+<!-- Alta y edición. Mismo formulario para ambas: el backend usa una sola función con un
+     indicador de "nuevo", y los campos que acepta son exactamente estos dos. -->
+<erp-modal
+  [(open)]="modalAbierto"
+  [title]="tituloModal()"
+  (closed)="onCerrarModal()"
+>
+  <form class="form" [formGroup]="form" (ngSubmit)="onGuardar()">
+    <label class="field">
+      <span>Nombre <em class="req">*</em></span>
+      <input
+        type="text"
+        formControlName="nombre"
+        [maxlength]="maxNombre"
+        autocomplete="off"
+        placeholder="ABARROTES"
+      />
+      @if (form.controls.nombre.touched && form.controls.nombre.hasError('required')) {
+      <small class="field__error">El nombre es obligatorio.</small>
+      }
+    </label>
+
+    <label class="field">
+      <span>Abreviatura</span>
+      <input
+        type="text"
+        formControlName="abreviatura"
+        [maxlength]="maxAbreviatura"
+        autocomplete="off"
+        placeholder="ABA"
+      />
+    </label>
+
+    <!-- Sin campos de estado ni de orden: la tabla no tiene esas columnas. -->
+    <p class="form__nota">
+      El número de subcategorías no se edita aquí: sale de las subcategorías que cuelgan de
+      esta categoría. Pulsa su número en el listado para verlas.
+    </p>
+
+    <!-- Submit oculto: hace que Enter envíe el formulario, ya que el botón real vive en el
+         pie del modal, fuera del <form>. -->
+    <button type="submit" hidden></button>
+  </form>
+
+  <div modalFooter>
+    <button type="button" class="btn btn--ghost" (click)="onCerrarModal()">
+      Cancelar
+    </button>
+    <button
+      type="button"
+      class="btn"
+      [disabled]="guardando()"
+      (click)="onGuardar()"
+    >
+      {{ guardando() ? 'Guardando…' : 'Guardar' }}
+    </button>
+  </div>
+</erp-modal>

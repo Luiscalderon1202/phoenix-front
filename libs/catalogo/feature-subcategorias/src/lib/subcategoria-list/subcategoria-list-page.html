@@ -1,0 +1,208 @@
+<div class="subcategorias">
+  <!-- Sin breadcrumbs ni subtítulo: la cabecera repetía el nombre de la pantalla y se comía
+       una franja de alto que la grilla aprovecha mejor. -->
+  <erp-page-header title="Subcategorías" [breadcrumbs]="false">
+    <button
+      headerActions
+      type="button"
+      class="btn-cerrar"
+      title="Volver"
+      aria-label="Volver"
+      (click)="onCerrar()"
+    >
+      <erp-icon name="close" />
+    </button>
+  </erp-page-header>
+
+  <!-- Los DOS filtros van al servidor: el stored procedure los aplica bien los dos. La
+       paginación, en cambio, se hace en cliente (el endpoint no manda `meta`). -->
+  <erp-filter-panel [head]="false">
+    <div class="filter-fields" [formGroup]="filters">
+      <label class="field field--search">
+        <span>Buscar</span>
+        <input
+          type="text"
+          formControlName="q"
+          placeholder="Nombre de la subcategoría…"
+          (keyup.enter)="onApply()"
+        />
+      </label>
+
+      <!-- Se puebla del catálogo de categorías. La opción vacía es «sin filtro»: se traduce a
+           omitir el parámetro, no a mandar el `-1` centinela del legacy. -->
+      <label class="field field--categoria">
+        <span>Categoría</span>
+        <select formControlName="categoriaid">
+          <option value="">Todas las categorías</option>
+          @for (c of categorias(); track c.categoriaid) {
+            <option [value]="c.categoriaid">{{ c.nombre }}</option>
+          }
+        </select>
+      </label>
+
+      <div class="field field--action">
+        <button type="button" class="btn" (click)="onApply()">
+          <erp-icon name="search" /> Buscar
+        </button>
+      </div>
+    </div>
+
+    <!-- Solo Exportar: este recurso no tiene reporte PDF, así que tampoco menú Imprimir. -->
+    <div filterActions>
+      <erp-export-menu (exportar)="onExportar($event)" />
+      @if (seleccionadas().length) {
+      <button
+        type="button"
+        class="btn btn--danger"
+        (click)="onEliminarSeleccionadas()"
+      >
+        <erp-icon name="trash" /> Eliminar ({{ seleccionadas().length }})
+      </button>
+      }
+      <button type="button" class="btn" (click)="onNuevo()">
+        <erp-icon name="plus" /> Nueva
+      </button>
+    </div>
+  </erp-filter-panel>
+
+  @if (error(); as err) {
+  <div class="alert-error alert-error--box">{{ err }}</div>
+  }
+
+  <!-- Sin `[reorderable]` y sin columna de estado: la tabla no tiene `orden` ni `estado`. -->
+  <erp-data-grid
+    [columns]="columns"
+    [rows]="rowsPagina()"
+    [loading]="loading()"
+    [selectable]="true"
+    (selectionChange)="onSeleccion($event)"
+  >
+
+    <ng-template [erpCell]="'abreviatura'" let-row>
+      @if (row.abreviatura) { {{ row.abreviatura }} } @else { — }
+    </ng-template>
+
+    <!-- Conteo de productos, derivado y de solo lectura. Tres formas, como el listado del
+         legacy: sin productos no se pinta nada, uno se dice con palabras y varios van en un
+         badge con el número. -->
+    <ng-template [erpCell]="'count_productos'" let-row>
+      @if (row.count_productos > 1) {
+        <span class="badge badge--info badge--plain">{{ row.count_productos }}</span>
+      } @else if (row.count_productos === 1) {
+        Solo un producto
+      } @else {
+        —
+      }
+    </ng-template>
+
+    <ng-template #rowActions let-row>
+      <button
+        type="button"
+        class="grid-action"
+        title="Editar"
+        (click)="onEditar(row)"
+      >
+        <erp-icon name="edit" />
+      </button>
+      <button
+        type="button"
+        class="grid-action grid-action--danger"
+        title="Eliminar"
+        (click)="onEliminar(row)"
+      >
+        <erp-icon name="trash" />
+      </button>
+    </ng-template>
+
+    <erp-grid-footer
+      gridPagination
+      [meta]="meta()"
+      [pageSizes]="pageSizes"
+      (pageChange)="onPage($event)"
+      (pageSizeChange)="onPageSize($event)"
+    />
+  </erp-data-grid>
+</div>
+
+<!-- Alta y edición. Mismo formulario para ambas: el backend usa una sola función con un
+     indicador de "nuevo", y los campos que acepta son exactamente estos. -->
+<erp-modal
+  [(open)]="modalAbierto"
+  [title]="tituloModal()"
+  (closed)="onCerrarModal()"
+>
+  <form class="form" [formGroup]="form" (ngSubmit)="onGuardar()">
+
+    <!-- La categoría es obligatoria también al editar: el stored procedure hace
+         `set categoriaid = incategoriaid`, así que dejarla vacía movería la subcategoría a la
+         categoría 0 («NO DEFINIDO»). Por eso el combo no es limpiable. -->
+    <!-- `div` y no `label`: el control real de `erp-combo-search` es un <button> que vive
+         dentro del componente, así que un <label> envolvente no puede asociarse a él. La
+         etiqueta accesible la lleva el propio botón, que anuncia la categoría elegida o el
+         placeholder. -->
+    <div class="field">
+      <span>Categoría <em class="req">*</em></span>
+      <erp-combo-search
+        formControlName="categoriaid"
+        [items]="categorias()"
+        bindValue="categoriaid"
+        bindLabel="nombre"
+        [clearable]="false"
+        placeholder="Elegir categoría…"
+      />
+      @if (form.controls.categoriaid.touched && form.controls.categoriaid.invalid) {
+      <small class="field__error">La categoría es obligatoria.</small>
+      }
+    </div>
+
+    <label class="field">
+      <span>Nombre <em class="req">*</em></span>
+      <input
+        type="text"
+        formControlName="nombre"
+        [maxlength]="maxNombre"
+        autocomplete="off"
+        placeholder="GENÉRICOS"
+      />
+      @if (form.controls.nombre.touched && form.controls.nombre.hasError('required')) {
+      <small class="field__error">El nombre es obligatorio.</small>
+      }
+    </label>
+
+    <label class="field">
+      <span>Abreviatura</span>
+      <input
+        type="text"
+        formControlName="abreviatura"
+        [maxlength]="maxAbreviatura"
+        autocomplete="off"
+        placeholder="GEN"
+      />
+    </label>
+
+    <!-- El aviso es literal a propósito: sin él, un 409 señalando una subcategoría de OTRA
+         categoría parece un error del sistema. No lo es: lo impone el stored procedure. -->
+    <p class="form__nota">
+      El nombre no puede repetirse en TODO el catálogo, ni siquiera en otra categoría: dos
+      categorías no pueden tener subcategorías con el mismo nombre.
+    </p>
+
+    <!-- Submit oculto: hace que Enter envíe el formulario, ya que el botón real vive en el
+         pie del modal, fuera del <form>. -->
+    <button type="submit" hidden></button>
+  </form>
+
+  <div modalFooter>
+    <button type="button" class="btn btn--ghost" (click)="onCerrarModal()">
+      Cancelar
+    </button>
+    <button
+      type="button"
+      class="btn"
+      [disabled]="guardando()"
+      (click)="onGuardar()"
+    >
+      {{ guardando() ? 'Guardando…' : 'Guardar' }}
+    </button>
+  </div>
+</erp-modal>

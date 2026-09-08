@@ -24,6 +24,12 @@
       "@phoenix/shared/ui/chrome": ["./libs/shared/ui/src/chrome.ts"],
       "@phoenix/basic/domain": ["./libs/basic/domain/src/index.ts"],
       "@phoenix/basic/data-access": ["./libs/basic/data-access/src/index.ts"],
+      "@phoenix/basic/feature-empresas": [
+        "./libs/basic/feature-empresas/src/index.ts"
+      ],
+      "@phoenix/basic/feature-almacenes": [
+        "./libs/basic/feature-almacenes/src/index.ts"
+      ],
       "@phoenix/basic/feature-tipos-telefono": [
         "./libs/basic/feature-tipos-telefono/src/index.ts"
       ],
@@ -95,6 +101,43 @@
       ],
       "@phoenix/basic/feature-personas": [
         "./libs/basic/feature-personas/src/index.ts"
+      ],
+      "@phoenix/catalogo/domain": ["./libs/catalogo/domain/src/index.ts"],
+      "@phoenix/catalogo/data-access": [
+        "./libs/catalogo/data-access/src/index.ts"
+      ],
+      "@phoenix/catalogo/feature-unidades-medida": [
+        "./libs/catalogo/feature-unidades-medida/src/index.ts"
+      ],
+      "@phoenix/catalogo/feature-unidades-base": [
+        "./libs/catalogo/feature-unidades-base/src/index.ts"
+      ],
+      "@phoenix/catalogo/feature-marcas": [
+        "./libs/catalogo/feature-marcas/src/index.ts"
+      ],
+      "@phoenix/catalogo/feature-categorias": [
+        "./libs/catalogo/feature-categorias/src/index.ts"
+      ],
+      "@phoenix/catalogo/feature-subcategorias": [
+        "./libs/catalogo/feature-subcategorias/src/index.ts"
+      ],
+      "@phoenix/catalogo/feature-lineas": [
+        "./libs/catalogo/feature-lineas/src/index.ts"
+      ],
+      "@phoenix/catalogo/feature-grupos": [
+        "./libs/catalogo/feature-grupos/src/index.ts"
+      ],
+      "@phoenix/catalogo/feature-laboratorios": [
+        "./libs/catalogo/feature-laboratorios/src/index.ts"
+      ],
+      "@phoenix/catalogo/feature-colores": [
+        "./libs/catalogo/feature-colores/src/index.ts"
+      ],
+      "@phoenix/catalogo/feature-tallas": [
+        "./libs/catalogo/feature-tallas/src/index.ts"
+      ],
+      "@phoenix/catalogo/feature-productos": [
+        "./libs/catalogo/feature-productos/src/index.ts"
       ]
     },
     "strict": false,

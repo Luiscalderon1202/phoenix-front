@@ -76,8 +76,9 @@ sin granularidad de acción. No cambiar sin leer el modelo de permisos.
 legacy hay que declarar su `scope:<modulo>` en `eslint.config.mjs`.
 
 Scopes declarados: `shared` (base, no depende de nadie), `basic` (tablas básicas
-y personas), `inventarios` (existencias, ventas y pedidos) y `tesorería` (caja,
-cobros y pagos). Los dos últimos van **por encima** de `basic` — un pedido se
+y personas), `catalogo` (el maestro de productos: unidades, marcas, categorías y
+subcategorías), `inventarios` (existencias, ventas y pedidos) y `tesorería` (caja,
+cobros y pagos). Los tres últimos van **por encima** de `basic` — un pedido se
 emite a una empresa, desde un almacén y para una persona, así que pueden mirar
 hacia abajo y `basic` no puede mirar hacia arriba. Entre ellos todavía no se
 conceden nada: las restricciones se abren cuando hay un import que las pida.
@@ -93,6 +94,18 @@ lo que el usuario ve.
 
 Migrar una de esas tablas es cambiar su `legacy` por `ruta` en
 `libs/basic/feature-tablas-basicas/.../tablas.ts`. El menú no se toca.
+
+⚠ **Y hay pantallas de mantenimiento que NO son tablas básicas.** Las cinco de
+`libs/catalogo/` —unidades de medida, unidad base, marcas, categorías y
+subcategorías— no aparecen en `TablasBasicas.php` ni en `tablas.ts`: son cinco
+opciones de menú propias (`basic.menuweb` 72-75 y 92, bajo el padre 70
+«Catalogo»), **cada una con su propio proceso de permiso** —`CAT-UNIDAD-MEDIDA`,
+`CAT-UNIDAD`, `CAT-MARCA`, `CAT-CATEGORIA`, `CAT-SUBCATEGORIA`—. Migrar una de
+ellas es poner su `ruta_phoenix` en su fila del menú
+(`auth.pamenu_ruta_set(74, '/mantenimiento/unidades-medida')`), no tocar
+`tablas.ts`. Comprueba siempre el `$segProcesoMenu` del `.php` antes de escribir
+el `procesoGuard`: copiar el del vecino abre la pantalla a quien no la tiene
+concedida.
 
 ## El proceso de permiso se decide por pantalla
 

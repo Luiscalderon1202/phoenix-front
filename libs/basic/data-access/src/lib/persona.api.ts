@@ -3,6 +3,8 @@ import type { Observable } from 'rxjs';
 import { ApiService, type PagedResult, type QueryParams } from '@phoenix/shared/http';
 import type {
   PersonaEstado,
+  PersonaFicha,
+  PersonaInput,
   PersonaListQuery,
   PersonaListRow,
   ResultadoLote,
@@ -73,6 +75,39 @@ export class PersonaApi {
   /** Listado paginado con filtros. Conserva `meta` (total) para el pie de grilla. */
   list(query: PersonaListQuery): Observable<PagedResult<PersonaListRow>> {
     return this.api.getList<PersonaListRow>(this.base, personaQueryParams(query));
+  }
+
+  /**
+   * Ficha del formulario.
+   *
+   * ⚠ NO es la fila del listado: separa los campos por tipo de persona y trae las cuatro
+   * listas hijas más los roles. Devuelve la persona esté activa o no, que hace falta para
+   * poder editar una desactivada.
+   */
+  get(personaid: number): Observable<PersonaFicha> {
+    return this.api.get<PersonaFicha>(`${this.base}/${personaid}`);
+  }
+
+  /**
+   * Alta. Escribe la persona ENTERA en una llamada: raíz, teléfonos, emails, redes,
+   * documentos y roles.
+   *
+   * ⚠ Además del proceso `PERSONA` del menú, el backend comprueba `persona-add` contra el
+   * SEGUNDO sistema de permisos (`basic.proceso`), que **no tiene paso libre para el
+   * superusuario**. Sin esa concesión sale un 403 `persona_process_forbidden`.
+   */
+  create(input: PersonaInput): Observable<PersonaFicha> {
+    return this.api.post<PersonaFicha>(this.base, input);
+  }
+
+  /**
+   * Edición. Mismo cuerpo que el alta, con `persona-edit` como permiso.
+   *
+   * ⚠ **Las cinco listas se guardan por REEMPLAZO**: hay que mandar siempre el juego
+   * completo. Lo que no se envíe se borra.
+   */
+  update(personaid: number, input: PersonaInput): Observable<PersonaFicha> {
+    return this.api.put<PersonaFicha>(`${this.base}/${personaid}`, input);
   }
 
   /**

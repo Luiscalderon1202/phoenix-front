@@ -38,6 +38,20 @@ export default [
               sourceTag: 'scope:basic',
               onlyDependOnLibsWithTags: ['scope:shared', 'scope:basic'],
             },
+            // `catalogo` = el maestro de productos: unidades de medida, unidad
+            // base, marcas, categorías y subcategorías. Va POR ENCIMA de
+            // `basic` y POR DEBAJO de `inventarios`: un pedido apunta a un
+            // producto, y un producto a una marca y a una subcategoría, pero el
+            // catálogo no sabe nada de almacenes ni de pedidos.
+            //
+            // ⚠ Estas pantallas NO cuelgan del hub `TABLAS-BASICAS`: son cinco
+            // opciones de menú propias (`basic.menuweb` 72-75 y 92, bajo el
+            // padre 70 «Catalogo») y cada una tiene su propio proceso de
+            // permiso. Por eso viven en su propio scope y no dentro de `basic`.
+            {
+              sourceTag: 'scope:catalogo',
+              onlyDependOnLibsWithTags: ['scope:shared', 'scope:basic', 'scope:catalogo'],
+            },
             // `inventarios` = existencias, ventas y pedidos. Va POR ENCIMA de
             // `basic`: un pedido se emite a una empresa, desde un almacén y para
             // una persona, así que puede mirar hacia abajo. `basic` no puede

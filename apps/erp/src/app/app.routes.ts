@@ -95,6 +95,25 @@ export const appRoutes: Route[] = [
               ),
           },
           {
+            path: 'empresas',
+            // Proceso propio (`basic.menuweb` 6), NO el hub de Tablas Basicas.
+            //
+            // ⚠ EMPRESA decide quien puede MANTENER el catalogo de empresas. No es el
+            // ambito multiempresa: quien puede operar sobre los datos de una empresa
+            // concreta lo decide `basic.permisos_empresa` y viaja como `?empresaid=`.
+            canMatch: [procesoGuard('EMPRESA')],
+            loadChildren: () =>
+              import('@phoenix/basic/feature-empresas').then((m) => m.EMPRESAS_ROUTES),
+          },
+          {
+            path: 'almacenes',
+            // Proceso propio (`basic.menuweb` 69). La tabla se llama `almacen` pero la
+            // pantalla son LOCALES: la sede fisica desde la que se vende.
+            canMatch: [procesoGuard('ALMACEN')],
+            loadChildren: () =>
+              import('@phoenix/basic/feature-almacenes').then((m) => m.ALMACENES_ROUTES),
+          },
+          {
             path: 'tipos-empresa',
             // Mismo proceso que Personas usa para lo suyo, pero aquí es TABLAS-BASICAS:
             // es el proceso que el legacy asigna a toda la pantalla TablasBasicas.php y
@@ -218,6 +237,131 @@ export const appRoutes: Route[] = [
             loadChildren: () =>
               import('@phoenix/tesoreria/feature-tipos-movimiento-caja').then(
                 (m) => m.TIPOS_MOVIMIENTO_CAJA_ROUTES,
+              ),
+          },
+          // ── Catálogo (maestro de productos) ─────────────────────────
+          // ⚠ Estas cinco NO cuelgan del hub TABLAS-BASICAS: son opciones de
+          // menú propias bajo el padre 70 («Catalogo») y CADA UNA TIENE SU
+          // PROPIO PROCESO. No están en `tablas.ts` y no deben añadirse ahí; el
+          // interruptor strangler es `ruta_phoenix` en su fila de `basic.menuweb`
+          // (74, 92, 73, 72 y 75 respectivamente).
+          {
+            path: 'unidades-medida',
+            // De UnidadMedida.php:9. menuweb 74.
+            canMatch: [procesoGuard('CAT-UNIDAD-MEDIDA')],
+            loadChildren: () =>
+              import('@phoenix/catalogo/feature-unidades-medida').then(
+                (m) => m.UNIDADES_MEDIDA_ROUTES,
+              ),
+          },
+          {
+            path: 'unidades-base',
+            // De Unidad.php:9. menuweb 92, «Unidad Base».
+            // ⚠ Es OTRA tabla que unidades de medida (`catalogo.unidad` frente a
+            // `catalogo.unidadmedida`) y otro permiso. Un producto necesita las
+            // dos a la vez: ProductoEdit.php pinta los dos selectores.
+            canMatch: [procesoGuard('CAT-UNIDAD')],
+            loadChildren: () =>
+              import('@phoenix/catalogo/feature-unidades-base').then(
+                (m) => m.UNIDADES_BASE_ROUTES,
+              ),
+          },
+          {
+            path: 'marcas',
+            // De Marca.php:9. menuweb 73.
+            canMatch: [procesoGuard('CAT-MARCA')],
+            loadChildren: () =>
+              import('@phoenix/catalogo/feature-marcas').then(
+                (m) => m.MARCAS_ROUTES,
+              ),
+          },
+          {
+            path: 'categorias',
+            // De Categoria.php:9. menuweb 72.
+            canMatch: [procesoGuard('CAT-CATEGORIA')],
+            loadChildren: () =>
+              import('@phoenix/catalogo/feature-categorias').then(
+                (m) => m.CATEGORIAS_ROUTES,
+              ),
+          },
+          {
+            path: 'subcategorias',
+            // De SubCategoria.php:8. menuweb 75.
+            // ⚠ El legacy declara `array("CAT-CATEGORIA","CAT-SUBCATEGORIA")`,
+            // que se evaluaba como OR. Aquí se exige solo el específico de la
+            // pantalla; es una decisión tomada, no un descuido.
+            canMatch: [procesoGuard('CAT-SUBCATEGORIA')],
+            loadChildren: () =>
+              import('@phoenix/catalogo/feature-subcategorias').then(
+                (m) => m.SUBCATEGORIAS_ROUTES,
+              ),
+          },
+          {
+            path: 'lineas',
+            // De Linea.php:9. menuweb 71.
+            // ⚠ Su columna `orden` no servía para nada en el legacy: no existe
+            // `palinea_cambiar_orden` y el `_leer` ordena por nombre a fuego. La
+            // migración 0009 de Phoenix aporta las dos cosas.
+            canMatch: [procesoGuard('CAT-LINEA')],
+            loadChildren: () =>
+              import('@phoenix/catalogo/feature-lineas').then(
+                (m) => m.LINEAS_ROUTES,
+              ),
+          },
+          {
+            path: 'grupos',
+            // De Grupo.php:9. menuweb 81, el primer nodo del grupo «Catalogo».
+            canMatch: [procesoGuard('CAT-GRUPO')],
+            loadChildren: () =>
+              import('@phoenix/catalogo/feature-grupos').then(
+                (m) => m.GRUPOS_ROUTES,
+              ),
+          },
+          {
+            path: 'laboratorios',
+            // De Laboratorio.php:9. menuweb 91.
+            canMatch: [procesoGuard('CAT-LABORATORIO')],
+            loadChildren: () =>
+              import('@phoenix/catalogo/feature-laboratorios').then(
+                (m) => m.LABORATORIOS_ROUTES,
+              ),
+          },
+          {
+            path: 'colores',
+            // De Color.php:9.
+            // ⚠ Este proceso NO TENÍA FILA en `basic.menuweb`: al legacy solo se
+            // llega por URL directa o desde el formulario de producto. La fila la
+            // crea Phoenix (ver el README de phoenix-api), con el proceso que el
+            // .php ya declaraba y no con uno inventado, para que el permiso valga
+            // en las dos aplicaciones mientras convivan.
+            canMatch: [procesoGuard('CAT-COLOR')],
+            loadChildren: () =>
+              import('@phoenix/catalogo/feature-colores').then(
+                (m) => m.COLORES_ROUTES,
+              ),
+          },
+          {
+            path: 'tallas',
+            // De Talla.php:9. Mismo caso que colores: proceso sin fila de menú en
+            // el legacy, fila creada por Phoenix.
+            canMatch: [procesoGuard('CAT-TALLA')],
+            loadChildren: () =>
+              import('@phoenix/catalogo/feature-tallas').then(
+                (m) => m.TALLAS_ROUTES,
+              ),
+          },
+          {
+            path: 'productos',
+            // De Producto.php:8, que declara `array("CAT-PRODUCTO")`. menuweb 76.
+            // ⚠ UNA ruta para DOS grillas: productos detallados y masters son las
+            // dos pestañas de la misma pantalla del legacy, comparten filtros y
+            // comparten permiso. No se parten en dos.
+            // ⚠ Y su fila de menú NO cuelga del padre 70 («Catalogo») como los diez
+            // catálogos, sino del 1.
+            canMatch: [procesoGuard('CAT-PRODUCTO')],
+            loadChildren: () =>
+              import('@phoenix/catalogo/feature-productos').then(
+                (m) => m.PRODUCTOS_ROUTES,
               ),
           },
           {

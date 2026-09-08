@@ -1,0 +1,16 @@
+{
+  "name": "catalogo-feature-categorias",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/catalogo/feature-categorias/src",
+  "prefix": "erp",
+  "projectType": "library",
+  "tags": [
+    "scope:catalogo",
+    "type:feature"
+  ],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

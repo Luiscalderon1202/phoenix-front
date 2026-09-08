@@ -1,0 +1,688 @@
+import { TestBed } from '@angular/core/testing';
+import { provideRouter, Router } from '@angular/router';
+import { of, throwError } from 'rxjs';
+import { ColorApi } from '@phoenix/catalogo/data-access';
+import type {
+  Color,
+  ColorFiltros,
+  ColorInput,
+  ResultadoLoteColor,
+} from '@phoenix/catalogo/domain';
+import { ConfirmService, NotificationService } from '@phoenix/shared/ui';
+import { ColorListPage } from './color-list-page';
+
+function color(over: Partial<Color> = {}): Color {
+  return {
+    colorid: 1,
+    nombre: 'AZUL MARINO',
+    abreviatura: 'AZM',
+    orden: 1,
+    estado: true,
+    cantidad_productos: 0,
+    ...over,
+  };
+}
+
+/**
+ * Doble del API que se comporta como el backend de verdad.
+ *
+ * ⚠ `list()` FILTRA POR NOMBRE (como `catalogo.pacolor_leer`) pero NO por estado ni por página:
+ * devuelve el catálogo entero, activos e inactivos. Es justo ese reparto —nombre al servidor,
+ * estado y paginación al cliente— el que prueban los tests de abajo, y con un doble que
+ * filtrase por estado no se distinguiría de un filtro delegado.
+ */
+class ColorApiMock {
+  rows: Color[] = [
+    color(),
+    color({ colorid: 2, nombre: 'ROJO', abreviatura: 'ROJ', orden: 2, cantidad_productos: 3 }),
+  ];
+
+  /** Los filtros que ha recibido `list()`, en orden. */
+  readonly consultas: ColorFiltros[] = [];
+  readonly creados: ColorInput[] = [];
+  readonly actualizados: { id: number; input: ColorInput }[] = [];
+  readonly eliminados: number[] = [];
+  readonly lotes: readonly number[][] = [];
+  readonly alternados: number[] = [];
+  readonly reordenes: { ids: number[]; desde: number }[] = [];
+
+  /** Resultado por id del lote; por defecto todo OK. */
+  loteResultado: ResultadoLoteColor[] | null = null;
+  /** Estado que devuelve `alternarEstado` (el contrato manda el RESULTANTE). */
+  estadoResultante = false;
+  /** Cuando es true, las mutaciones fallan: sirve para probar la reversión optimista. */
+  fallar = false;
+
+  list(filtros: ColorFiltros = {}) {
+    this.consultas.push({ ...filtros });
+    let out = this.rows;
+    if (filtros.q?.trim()) {
+      const q = filtros.q.trim().toLocaleLowerCase('es');
+      out = out.filter((g) => g.nombre.toLocaleLowerCase('es').includes(q));
+    }
+    return of(out);
+  }
+
+  create(input: ColorInput) {
+    this.creados.push(input);
+    if (this.fallar) return throwError(() => new Error('409'));
+    const creado = color({ colorid: 99, ...input, orden: this.rows.length + 1 });
+    this.rows = [...this.rows, creado];
+    return of(creado);
+  }
+
+  update(id: number, input: ColorInput) {
+    this.actualizados.push({ id, input });
+    if (this.fallar) return throwError(() => new Error('409'));
+    const previo = this.rows.find((row) => row.colorid === id);
+    const actualizado = color({ ...previo, colorid: id, ...input });
+    this.rows = this.rows.map((row) => (row.colorid === id ? actualizado : row));
+    return of(actualizado);
+  }
+
+  remove(id: number) {
+    this.eliminados.push(id);
+    if (this.fallar) return throwError(() => new Error('409'));
+    this.rows = this.rows.filter((row) => row.colorid !== id);
+    return of(undefined as unknown as void);
+  }
+
+  removeLote(ids: readonly number[]) {
+    (this.lotes as number[][]).push([...ids]);
+    if (this.fallar) return throwError(() => new Error('500'));
+    const resultados = this.loteResultado ?? ids.map((colorid) => ({ colorid, ok: true }));
+    const borrados = new Set(resultados.filter((r) => r.ok).map((r) => r.colorid));
+    this.rows = this.rows.filter((row) => !borrados.has(row.colorid));
+    return of(resultados);
+  }
+
+  alternarEstado(colorid: number) {
+    this.alternados.push(colorid);
+    if (this.fallar) return throwError(() => new Error('500'));
+    return of({ colorid, estado: this.estadoResultante });
+  }
+
+  reordenar(ids: readonly number[], desde = 1) {
+    this.reordenes.push({ ids: [...ids], desde });
+    if (this.fallar) return throwError(() => new Error('500'));
+    return of(undefined as unknown as void);
+  }
+}
+
+class ConfirmServiceMock {
+  respuesta = true;
+  readonly preguntas: unknown[] = [];
+  ask(opts: unknown) {
+    this.preguntas.push(opts);
+    return Promise.resolve(this.respuesta);
+  }
+}
+
+class NotificationServiceMock {
+  readonly exitos: string[] = [];
+  readonly errores: string[] = [];
+  success(msg: string) {
+    this.exitos.push(msg);
+  }
+  error(msg: string) {
+    this.errores.push(msg);
+  }
+}
+
+async function setup(api = new ColorApiMock()) {
+  const confirm = new ConfirmServiceMock();
+  const notify = new NotificationServiceMock();
+
+  TestBed.configureTestingModule({
+    imports: [ColorListPage],
+    providers: [
+      // `erp-page-header` monta los breadcrumbs, que leen la ruta activa.
+      provideRouter([]),
+      { provide: ColorApi, useValue: api },
+      { provide: ConfirmService, useValue: confirm },
+      { provide: NotificationService, useValue: notify },
+    ],
+  });
+
+  const fixture = TestBed.createComponent(ColorListPage);
+  fixture.detectChanges();
+  await fixture.whenStable();
+  fixture.detectChanges();
+  return { fixture, api, confirm, notify, el: fixture.nativeElement as HTMLElement };
+}
+
+/** Deja correr las promesas encadenadas y repinta. */
+async function asentar(fixture: { whenStable(): Promise<unknown>; detectChanges(): void }) {
+  for (let i = 0; i < 4; i++) {
+    await fixture.whenStable();
+    fixture.detectChanges();
+  }
+}
+
+/** Acceso al componente sin exponer sus miembros protegidos al resto del test. */
+function comp(fixture: { componentInstance: unknown }) {
+  return fixture.componentInstance as unknown as Record<string, (...a: never[]) => unknown> & {
+    filters: { patchValue(v: unknown): void };
+    form: { patchValue(v: unknown): void; getRawValue(): ColorInput };
+    columns: { key: string; header?: string; sortable?: boolean }[];
+    rows(): Color[];
+    rowsPagina(): Color[];
+    modalAbierto(): boolean;
+    tituloModal(): string;
+    seleccionadas(): { colorid: number }[];
+    filtrando(): boolean;
+    onExportar(e: { formato: string; detalle: boolean }): void;
+    onCerrar(): void;
+    onApply(): void;
+    onPage(n: number): void;
+    onPageSize(n: number): void;
+    meta(): { page: number; pageSize: number; total: number; totalPages: number };
+  };
+}
+
+/** Último filtro que recibió el backend. */
+function ultima(api: ColorApiMock): ColorFiltros {
+  return api.consultas[api.consultas.length - 1];
+}
+
+function celdas(el: HTMLElement, colIndex: number): string[] {
+  // +1: la primera celda es el checkbox de selección.
+  return Array.from(el.querySelectorAll('tbody tr')).map(
+    (tr) =>
+      tr
+        .querySelectorAll('td')
+        [colIndex + 1]?.textContent?.replace(/\s+/g, ' ')
+        .trim() ?? '',
+  );
+}
+
+/** Catálogo grande para los tests de paginación. */
+function catalogo(n: number): Color[] {
+  return Array.from({ length: n }, (_, i) =>
+    color({
+      colorid: i + 1,
+      nombre: `COLOR ${String(i + 1).padStart(2, '0')}`,
+      abreviatura: `G${i + 1}`,
+      orden: i + 1,
+    }),
+  );
+}
+
+describe('ColorListPage', () => {
+  // La descarga crea un <a download> y lo pulsa. jsdom no implementa la navegación que eso
+  // provoca y escupe un "Not implemented" por consola que no es un fallo, solo ruido.
+  beforeEach(() => {
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
+    URL.createObjectURL = vi.fn(() => 'blob:test');
+    URL.revokeObjectURL = vi.fn();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('pinta el catálogo con la columna de orden y la de estado', async () => {
+    const { fixture, el } = await setup();
+    const c = comp(fixture);
+
+    expect(el.querySelectorAll('tbody tr').length).toBe(2);
+    expect(c.columns.map((col) => col.key)).toEqual([
+      'orden',
+      'nombre',
+      'abreviatura',
+      'cantidad_productos',
+      'estado',
+    ]);
+    expect(celdas(el, 1)).toEqual(['AZUL MARINO', 'ROJO']);
+  });
+
+  it('ninguna columna es ordenable', async () => {
+    // El orden de este catálogo es un dato editable (`orden`), no una vista: dejar ordenar por
+    // columna haría que el arrastre guardase un orden que no es el que se está viendo.
+    const { fixture, el } = await setup();
+    expect(comp(fixture).columns.some((col) => col.sortable)).toBe(false);
+    expect(el.querySelectorAll('thead .sort').length).toBe(0);
+  });
+
+  it('arranca mostrando activos e inactivos, sin mandarle el estado al backend', async () => {
+    // `catalogo.pacolor_leer` no tiene parámetro de estado: devuelve todo. Por eso el selector
+    // arranca en «Todos» y el filtro se resuelve en el cliente.
+    const api = new ColorApiMock();
+    api.rows = [color(), color({ colorid: 2, nombre: 'APAGADO', estado: false, orden: 2 })];
+    const { fixture } = await setup(api);
+
+    expect(ultima(api)).toEqual({ q: '' });
+    expect(comp(fixture).rows().map((row) => row.nombre)).toEqual(['AZUL MARINO', 'APAGADO']);
+  });
+
+  it('el filtro por nombre VA AL SERVIDOR', async () => {
+    // Filtrar aquí sería reimplementar `public.buscar()`, que normaliza tildes con dos erratas
+    // conocidas: mejor heredar la comparación que hace el resto del sistema.
+    const { fixture, api } = await setup();
+    const c = comp(fixture);
+
+    c.filters.patchValue({ q: 'rojo' });
+    c.onApply();
+    await asentar(fixture);
+
+    expect(ultima(api).q).toBe('rojo');
+    expect(c.rows().map((row) => row.nombre)).toEqual(['ROJO']);
+  });
+
+  it('el filtro de estado se resuelve EN CLIENTE, sin volver a consultar', async () => {
+    // El endpoint no sabe filtrar por estado, así que no hay nada que delegarle: cambiar el
+    // selector no debe disparar una petición.
+    const api = new ColorApiMock();
+    api.rows = [color(), color({ colorid: 2, nombre: 'APAGADO', estado: false, orden: 2 })];
+    const { fixture } = await setup(api);
+    const c = comp(fixture);
+    const antes = api.consultas.length;
+
+    c.filters.patchValue({ estado: 'inactivos' });
+    c.onApply();
+    await asentar(fixture);
+
+    expect(api.consultas.length).toBe(antes); // ni una petición más
+    expect(c.rows().map((row) => row.nombre)).toEqual(['APAGADO']);
+
+    c.filters.patchValue({ estado: 'activos' });
+    c.onApply();
+    await asentar(fixture);
+    expect(c.rows().map((row) => row.nombre)).toEqual(['AZUL MARINO']);
+  });
+
+  it('la paginación es de CLIENTE: trocea lo que ya trajo', async () => {
+    // El endpoint devuelve el catálogo entero y sin `meta`: no existe `pacolor_count`.
+    const api = new ColorApiMock();
+    api.rows = catalogo(30);
+    const { fixture, el } = await setup(api);
+    const c = comp(fixture);
+    const antes = api.consultas.length;
+
+    expect(c.rows().length).toBe(30); // todo en memoria
+    expect(el.querySelectorAll('tbody tr').length).toBe(25); // solo se pinta la página
+    expect(c.meta()).toMatchObject({ page: 1, pageSize: 25, total: 30, totalPages: 2 });
+
+    c.onPage(2);
+    fixture.detectChanges();
+
+    expect(api.consultas.length).toBe(antes); // no se vuelve al servidor
+    expect(c.rowsPagina().length).toBe(5);
+    expect(c.rowsPagina()[0].nombre).toBe('COLOR 26');
+  });
+
+  it('cambiar el tamaño de página vuelve a la primera', async () => {
+    const api = new ColorApiMock();
+    api.rows = catalogo(30);
+    const { fixture } = await setup(api);
+    const c = comp(fixture);
+
+    c.onPage(2);
+    c.onPageSize(10);
+    fixture.detectChanges();
+
+    expect(c.meta()).toMatchObject({ page: 1, pageSize: 10, total: 30, totalPages: 3 });
+  });
+
+  it('alterna el estado y se queda con el valor que devuelve el backend', async () => {
+    // El endpoint es un TOGGLE: no se le manda el valor deseado. Pero sí devuelve el resultante,
+    // y es ése el que se pinta.
+    const api = new ColorApiMock();
+    api.estadoResultante = false;
+    const { fixture } = await setup(api);
+    const c = comp(fixture);
+
+    c.onToggleEstado(color() as never);
+    await asentar(fixture);
+
+    expect(api.alternados).toEqual([1]);
+    expect(c.rows()[0].estado).toBe(false);
+  });
+
+  it('revierte el estado si el backend falla', async () => {
+    const api = new ColorApiMock();
+    api.fallar = true;
+    const { fixture } = await setup(api);
+    const c = comp(fixture);
+
+    c.onToggleEstado(color() as never);
+    await asentar(fixture);
+
+    expect(c.rows()[0].estado).toBe(true);
+  });
+
+  it('al reordenar manda la lista completa desde la posición 1 y renumera en local', async () => {
+    // Aquí la función es del LEGACY y ya sirve: `catalogo.pacolor_cambiar_orden` recibe `vstart`
+    // y numera `orden = posición + (vstart-1)`. La pantalla le manda 1 porque solo deja arrastrar
+    // con el catálogo entero a la vista, así que la numeración queda 1..n.
+    const { fixture, api } = await setup();
+    const c = comp(fixture);
+
+    const invertido = [...c.rows()].reverse();
+    c.onReorder(invertido as never);
+    await asentar(fixture);
+
+    expect(api.reordenes).toEqual([{ ids: [2, 1], desde: 1 }]);
+    expect(c.rows().map((row) => [row.colorid, row.orden])).toEqual([
+      [2, 1],
+      [1, 2],
+    ]);
+  });
+
+  it('revierte el orden si el backend falla', async () => {
+    const api = new ColorApiMock();
+    api.fallar = true;
+    const { fixture } = await setup(api);
+    const c = comp(fixture);
+
+    const antes = c.rows().map((row) => row.colorid);
+    c.onReorder([...c.rows()].reverse() as never);
+    await asentar(fixture);
+
+    expect(c.rows().map((row) => row.colorid)).toEqual(antes);
+  });
+
+  it('el arrastre solo se enciende con el catálogo entero a la vista', async () => {
+    // Con cualquier filtro puesto la grilla emitiría solo las filas visibles, y renumerarlas
+    // desde 1 machacaría el `orden` de las que no se ven.
+    const { fixture } = await setup();
+    const c = comp(fixture);
+    expect(c.filtrando()).toBe(false); // arranca en «Todos» y sin texto
+
+    c.filters.patchValue({ estado: 'activos' });
+    c.onApply();
+    await asentar(fixture);
+    expect(c.filtrando()).toBe(true);
+
+    c.filters.patchValue({ estado: 'todas', q: 'rojo' });
+    c.onApply();
+    await asentar(fixture);
+    expect(c.filtrando()).toBe(true);
+  });
+
+  it('desactiva el arrastre cuando la lista no cabe en una página', async () => {
+    const api = new ColorApiMock();
+    api.rows = catalogo(30);
+    const { fixture } = await setup(api);
+    const c = comp(fixture);
+
+    expect(c.meta().totalPages).toBe(2);
+    expect(c.filtrando()).toBe(true);
+
+    c.onPageSize(100);
+    fixture.detectChanges();
+    expect(c.filtrando()).toBe(false);
+  });
+
+  it('el alta manda SOLO los dos campos del formulario', async () => {
+    // Ni `estado` ni `orden` ni `cantidad_productos`: los dos primeros tienen su propia acción
+    // en la grilla y el tercero es derivado.
+    const { fixture, api, notify } = await setup();
+    const c = comp(fixture);
+
+    c.onNuevo();
+    c.form.patchValue({ nombre: 'VERDE', abreviatura: 'VRD' });
+    c.onGuardar();
+    await asentar(fixture);
+
+    expect(api.creados).toEqual([{ nombre: 'VERDE', abreviatura: 'VRD' }]);
+    expect(c.modalAbierto()).toBe(false);
+    expect(notify.exitos.length).toBe(1);
+  });
+
+  it('ni el alta ni la edición mandan la columna `color` de la tabla', async () => {
+    // ⚠ Es LA regresión de esta pantalla. `catalogo.color.color` (varchar 50) está muerta en las
+    // tres capas del legacy —`ColorEdit.php` no tiene input, `color.js` pinta la celda vacía y
+    // `ajColor.php:31` manda `txtColor`, un campo que el formulario nunca envía—, de modo que
+    // CADA GUARDADO DEL LEGACY LA BORRA. Phoenix la preserva en el backend, releyendo la fila; el
+    // front no debe mandarla ni en blanco ni de ninguna otra forma, porque el cuerpo que llega es
+    // lo que el servicio usa para decidir. Los cuerpos son exactamente dos campos y nada más.
+    const { fixture, api } = await setup();
+    const c = comp(fixture);
+
+    c.onNuevo();
+    c.form.patchValue({ nombre: 'VERDE', abreviatura: 'VRD' });
+    c.onGuardar();
+    await asentar(fixture);
+
+    c.onEditar(color({ colorid: 2, nombre: 'ROJO', abreviatura: 'ROJ' }) as never);
+    c.form.patchValue({ nombre: 'ROJO CARMIN' });
+    c.onGuardar();
+    await asentar(fixture);
+
+    expect(Object.keys(api.creados[0]).sort()).toEqual(['abreviatura', 'nombre']);
+    expect(Object.keys(api.actualizados[0].input).sort()).toEqual(['abreviatura', 'nombre']);
+  });
+
+  it('la grilla no pinta ninguna columna para la columna `color`', async () => {
+    // No se expone: no hay pantalla que la rellene, así que enseñarla vacía solo confundiría.
+    const { fixture } = await setup();
+    expect(comp(fixture).columns.some((col) => col.key === 'color')).toBe(false);
+  });
+
+  it('el formulario no ofrece ni estado, ni orden, ni el conteo de productos', async () => {
+    const { fixture, el } = await setup();
+    const c = comp(fixture);
+
+    c.onNuevo();
+    fixture.detectChanges();
+
+    expect(c.form.getRawValue()).toEqual({ nombre: '', abreviatura: '' });
+    expect(el.querySelector('erp-modal [formControlName="estado"]')).toBeNull();
+    expect(el.querySelector('erp-modal [formControlName="orden"]')).toBeNull();
+    expect(el.querySelector('erp-modal [formControlName="cantidad_productos"]')).toBeNull();
+  });
+
+  it('tras crear añade la fila al final sin volver al servidor', async () => {
+    // El backend coloca el alta al final del orden (`pacolor_ultimo_orden()+1`), así que la
+    // lista en memoria puede reflejarlo sin recargar y sin hacer parpadear la pantalla.
+    const { fixture, api } = await setup();
+    const c = comp(fixture);
+    const antes = api.consultas.length;
+
+    c.onNuevo();
+    c.form.patchValue({ nombre: 'VERDE', abreviatura: 'VRD' });
+    c.onGuardar();
+    await asentar(fixture);
+
+    expect(api.consultas.length).toBe(antes);
+    expect(c.rows().map((row) => row.nombre)).toEqual(['AZUL MARINO', 'ROJO', 'VERDE']);
+  });
+
+  it('no envía nada si falta el nombre', async () => {
+    const { fixture, api } = await setup();
+    const c = comp(fixture);
+
+    c.onNuevo();
+    c.form.patchValue({ nombre: '' });
+    c.onGuardar();
+    await asentar(fixture);
+
+    expect(api.creados).toEqual([]);
+    expect(c.modalAbierto()).toBe(true);
+  });
+
+  it('deja el modal abierto con lo escrito si el guardado falla', async () => {
+    // 409 por nombre duplicado: hay que poder corregirlo sin volver a teclearlo todo.
+    const api = new ColorApiMock();
+    api.fallar = true;
+    const { fixture } = await setup(api);
+    const c = comp(fixture);
+
+    c.onNuevo();
+    c.form.patchValue({ nombre: 'AZUL MARINO', abreviatura: 'AZM' });
+    c.onGuardar();
+    await asentar(fixture);
+
+    expect(c.modalAbierto()).toBe(true);
+    expect(c.form.getRawValue()).toEqual({ nombre: 'AZUL MARINO', abreviatura: 'AZM' });
+  });
+
+  it('editar precarga los dos campos y manda un PUT', async () => {
+    const { fixture, api } = await setup();
+    const c = comp(fixture);
+
+    c.onEditar(color({ colorid: 2, nombre: 'ROJO', abreviatura: 'ROJ' }) as never);
+    expect(c.tituloModal()).toBe('Editar color');
+    expect(c.form.getRawValue()).toEqual({ nombre: 'ROJO', abreviatura: 'ROJ' });
+
+    c.form.patchValue({ nombre: 'ROJO CARMIN' });
+    c.onGuardar();
+    await asentar(fixture);
+
+    expect(api.actualizados).toEqual([
+      { id: 2, input: { nombre: 'ROJO CARMIN', abreviatura: 'ROJ' } },
+    ]);
+    expect(api.creados).toEqual([]);
+  });
+
+  it('la edición no cambia ni el estado ni el orden del registro', async () => {
+    // El backend le devuelve al stored procedure el estado que la fila ya tenía, y su update no
+    // menciona la columna `orden`.
+    const api = new ColorApiMock();
+    api.rows = [color({ colorid: 1, estado: false, orden: 7 })];
+    const { fixture } = await setup(api);
+    const c = comp(fixture);
+
+    c.onEditar(api.rows[0] as never);
+    c.form.patchValue({ nombre: 'RENOMBRADO' });
+    c.onGuardar();
+    await asentar(fixture);
+
+    expect(c.rows()[0]).toMatchObject({ nombre: 'RENOMBRADO', estado: false, orden: 7 });
+  });
+
+  it('eliminar pide confirmación antes de llamar al backend', async () => {
+    const { fixture, api, confirm } = await setup();
+    const c = comp(fixture);
+    confirm.respuesta = false;
+
+    c.onEliminar(color() as never);
+    await asentar(fixture);
+
+    expect(confirm.preguntas.length).toBe(1);
+    expect(api.eliminados).toEqual([]);
+  });
+
+  it('elimina y quita la fila de la lista', async () => {
+    const { fixture, api, notify } = await setup();
+    const c = comp(fixture);
+
+    c.onEliminar(color() as never);
+    await asentar(fixture);
+
+    expect(api.eliminados).toEqual([1]);
+    expect(c.rows().map((row) => row.colorid)).toEqual([2]);
+    expect(notify.exitos.length).toBe(1);
+  });
+
+  it('la grilla ofrece checkbox de selección por fila', async () => {
+    const { el } = await setup();
+    expect(el.querySelectorAll('tbody input[type="checkbox"]').length).toBe(2);
+  });
+
+  it('el borrado en lote va en UNA petición, no N deletes', async () => {
+    const { fixture, api, el } = await setup();
+    const c = comp(fixture);
+
+    (el.querySelector('thead .col-select input') as HTMLInputElement).click();
+    fixture.detectChanges();
+    expect(c.seleccionadas().length).toBe(2);
+
+    (el.querySelector('[filterActions] .btn--danger') as HTMLButtonElement).click();
+    await asentar(fixture);
+
+    expect(api.lotes).toEqual([[1, 2]]);
+    expect(api.eliminados).toEqual([]); // no cae al endpoint de uno en uno
+    expect(c.rows()).toEqual([]);
+    expect(c.seleccionadas()).toEqual([]);
+  });
+
+  it('el lote es parcial: conserva los que fallaron y avisa con el motivo del backend', async () => {
+    const api = new ColorApiMock();
+    api.loteResultado = [
+      { colorid: 1, ok: true },
+      { colorid: 2, ok: false, codigo: 'color_has_relations', mensaje: 'Tiene productos registrados.' },
+    ];
+    const { fixture, notify } = await setup(api);
+    const c = comp(fixture);
+
+    c.onSeleccion([{ colorid: 1 }, { colorid: 2 }] as never);
+    c.onEliminarSeleccionadas();
+    await asentar(fixture);
+
+    expect(c.rows().map((row) => row.colorid)).toEqual([2]);
+    expect(notify.exitos).toEqual(['Se eliminaron 1 registro(s).']);
+    expect(notify.errores.length).toBe(1);
+    expect(notify.errores[0]).toContain('Tiene productos registrados.');
+  });
+
+  it('sin productos, la celda queda en gris', async () => {
+    // Un cero repetido 25 veces es ruido; el legacy también deja la celda en blanco.
+    const api = new ColorApiMock();
+    api.rows = [color({ cantidad_productos: 0 })];
+    const { el } = await setup(api);
+
+    expect(celdas(el, 3)).toEqual(['—']);
+    expect(el.querySelector('tbody .badge--conteo')).toBeNull();
+  });
+
+  it('con un solo producto lo dice con palabras, sin badge', async () => {
+    const api = new ColorApiMock();
+    api.rows = [color({ cantidad_productos: 1 })];
+    const { el } = await setup(api);
+
+    expect(celdas(el, 3)).toEqual(['Solo un producto']);
+    expect(el.querySelector('tbody .badge--conteo')).toBeNull();
+  });
+
+  it('con varios productos pinta el número en un badge', async () => {
+    const api = new ColorApiMock();
+    api.rows = [color({ cantidad_productos: 12 })];
+    const { el } = await setup(api);
+
+    expect(celdas(el, 3)).toEqual(['12 productos']);
+    expect(el.querySelector('tbody .badge--conteo')?.textContent?.trim()).toBe('12');
+  });
+
+  it('lleva un único menú —Exportar— y el botón de cerrar en la cabecera', async () => {
+    // Este recurso no tiene reporte PDF, así que tampoco menú Imprimir ni visor.
+    const { el } = await setup();
+    expect(el.querySelectorAll('erp-export-menu').length).toBe(1);
+    expect(el.querySelector('.btn-cerrar')).not.toBeNull();
+    expect(el.querySelector('erp-file-viewer')).toBeNull();
+    expect(el.querySelector('erp-print-header')).toBeNull();
+  });
+
+  it('exporta lo filtrado sin pedir nada al backend', async () => {
+    // Todo está en memoria: se genera en el navegador.
+    const anchor = vi.spyOn(HTMLAnchorElement.prototype, 'click');
+    const api = new ColorApiMock();
+    api.rows = catalogo(30);
+    const { fixture } = await setup(api);
+    const c = comp(fixture);
+    const antes = api.consultas.length;
+
+    c.onExportar({ formato: 'csv', detalle: false });
+
+    expect(anchor).toHaveBeenCalled();
+    expect(api.consultas.length).toBe(antes);
+    expect(c.rows().length).toBe(30); // se exporta todo lo filtrado, no solo la página
+  });
+
+  it('sin historia previa, cerrar vuelve a /inicio', async () => {
+    // ⚠ NO a /mantenimiento/tablas-basicas: Colores no cuelga de ese hub.
+    const { fixture } = await setup();
+    const router = TestBed.inject(Router);
+    const navigate = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+
+    comp(fixture).onCerrar();
+
+    expect(navigate).toHaveBeenCalledWith(['/inicio']);
+  });
+
+  it('muestra el pie con la paginación', async () => {
+    const { el } = await setup();
+    expect(el.querySelector('erp-grid-footer')).not.toBeNull();
+  });
+});

@@ -113,3 +113,214 @@ export interface PersonaListQuery {
   rolid?: number;
   orderby?: PersonaOrderBy | '';
 }
+
+// ─── Ficha, alta y edición ───────────────────────────────────────────────────
+
+/**
+ * Ficha del formulario (`GET /personas/{id}`).
+ *
+ * ⚠ NO es la fila del listado: separa los campos por tipo de persona y añade las
+ * cuatro listas hijas más los roles. El backend la arma con seis consultas, porque
+ * el stored procedure de lectura no devuelve los hijos aunque el de escritura sí
+ * los reciba todos juntos.
+ */
+export interface PersonaFicha {
+  personaid: number;
+  /** `N` natural, `J` jurídica. Decide qué mitad del formulario aplica. */
+  tipo: TipoPersona;
+
+  direccion: string;
+  distritoid: number;
+  paisid: number;
+  /** Se cambia con el interruptor del listado, no editando. */
+  estado: boolean;
+  /**
+   * Fecha de alta, de SOLO LECTURA.
+   *
+   * ⚠ Llega como `dd/mm/aaaa hh:mm AM`, ya formateada por la base — la columna del
+   * tipo compuesto es texto, no `date` —, y NO en ISO como `nacimiento`. No intentes
+   * parsearla con `new Date()`.
+   */
+  registro: string;
+
+  // Solo persona natural.
+  titulo: string;
+  ape_pat: string;
+  ape_mat: string;
+  nombre: string;
+  sexo: string;
+  est_civil: string;
+  /** ISO `aaaa-mm-dd`. Obligatoria para una persona natural. */
+  nacimiento: string;
+
+  // Solo persona jurídica.
+  raz_soc: string;
+  nombre_comercial: string;
+
+  // Cadena geográfica resuelta, para pintarla sin otra petición.
+  distrito_nombre: string;
+  provinciaid: number;
+  provincia_nombre: string;
+  departamentoid: number;
+  departamento_nombre: string;
+  pais_nombre: string;
+
+  /**
+   * Nombre de archivo, de SOLO LECTURA. Se cambia con su propio endpoint del
+   * legacy, que exige el permiso `persona-photo` y **no está migrado**.
+   */
+  foto: string;
+
+  telefonos: PersonaTelefono[];
+  emails: PersonaEmail[];
+  social_media: PersonaSocialMedia[];
+  documentos: PersonaDocumento[];
+  /** Solo los ids: el nombre lo tiene el cliente por `/catalogos/roles`. */
+  roles: number[];
+}
+
+/** Teléfono de una persona. */
+export interface PersonaTelefono {
+  telefonoid: number;
+  personaid: number;
+  /**
+   * Apunta a `basic.tipotelefono`.
+   *
+   * ⚠ NO es el mismo espacio de numeración que el `tipoid` de un documento de
+   * identidad ni el de un email, aunque las tres columnas se llamen igual.
+   */
+  tipoid: number;
+  tipo_nombre: string;
+  /** Lo aporta el catálogo, no la fila. */
+  tipo_requerido: boolean;
+  numero: string;
+  nombre: string;
+  /** El principal, que es el que sube a la columna `telefono` de la persona. */
+  main: boolean;
+  publico: boolean;
+}
+
+/** Email de una persona. */
+export interface PersonaEmail {
+  emailid: number;
+  personaid: number;
+  /** Apunta a `basic.tipoemail`. */
+  tipoid: number;
+  tipo_nombre: string;
+  tipo_requerido: boolean;
+  email: string;
+  nombre: string;
+  main: boolean;
+  publico: boolean;
+}
+
+/**
+ * Red social de una persona.
+ *
+ * ⚠ No tiene id propio: la tabla se identifica por (personaid, tipoid). Por eso el
+ * guardado la borra entera y la reinserta.
+ */
+export interface PersonaSocialMedia {
+  personaid: number;
+  /** Apunta a `basic.tiposocialmedia`. */
+  tipoid: number;
+  tipo_nombre: string;
+  /** Plantilla del perfil; se le concatena el usuario. */
+  tipo_url: string;
+  usuario: string;
+}
+
+/** Documento de identidad de una persona. */
+export interface PersonaDocumento {
+  personaid: number;
+  /** Apunta a `basic.tipoid` (DNI, RUC…). Otro espacio de numeración. */
+  tipoid: number;
+  tipo_nombre: string;
+  numero: string;
+  /** «DNI 12345678», ya compuesto por la base. */
+  tipo_nombre_numero: string;
+  main: boolean;
+}
+
+/**
+ * Cuerpo del alta y de la edición. Escribe la persona ENTERA en una llamada.
+ *
+ * ⚠ **LAS CINCO LISTAS SE GUARDAN POR REEMPLAZO, NO POR ACUMULACIÓN.** Hay que
+ * mandar siempre el juego completo, también al editar:
+ *
+ * - **Teléfonos y emails** se actualizan por su id (`telefonoid`/`emailid` en `0`
+ *   da de alta) y **lo que no se envíe se BORRA**.
+ * - **Redes, documentos y roles** se borran enteros y se reinsertan.
+ *
+ * Mandar una lista vacía significa «quítalos todos», no «no los toques».
+ *
+ * No lleva `estado` ni `foto`: cada uno tiene su ruta y su permiso.
+ */
+export interface PersonaInput {
+  tipo: TipoPersona;
+  direccion: string;
+  distritoid: number;
+  paisid: number;
+
+  titulo: string;
+  ape_pat: string;
+  ape_mat: string;
+  nombre: string;
+  sexo: string;
+  est_civil: string;
+  /** ISO `aaaa-mm-dd`. OBLIGATORIA si `tipo` es `N`: la columna es NOT NULL. */
+  nacimiento: string;
+
+  raz_soc: string;
+  nombre_comercial: string;
+  sunat_activo: boolean;
+  sunat_habido: boolean;
+
+  telefonos: PersonaTelefonoInput[];
+  emails: PersonaEmailInput[];
+  social_media: PersonaSocialMediaInput[];
+  documentos: PersonaDocumentoInput[];
+  roles: number[];
+}
+
+/** `telefonoid` en 0 da de alta; con valor, actualiza esa fila. */
+export interface PersonaTelefonoInput {
+  telefonoid: number;
+  tipoid: number;
+  numero: string;
+  nombre: string;
+  main: boolean;
+  publico: boolean;
+}
+
+/** `emailid` en 0 da de alta; con valor, actualiza esa fila. */
+export interface PersonaEmailInput {
+  emailid: number;
+  tipoid: number;
+  email: string;
+  main: boolean;
+  publico: boolean;
+}
+
+export interface PersonaSocialMediaInput {
+  tipoid: number;
+  usuario: string;
+}
+
+export interface PersonaDocumentoInput {
+  tipoid: number;
+  numero: string;
+}
+
+/**
+ * Límites de las columnas de texto.
+ *
+ * ⚠ Salen de la COLUMNA, comprobados uno a uno contra el catálogo. Fíjate en que
+ * el nombre y los apellidos son 50, no 100, y el título 20.
+ */
+export const PERSONA_MAX_TITULO = 20;
+export const PERSONA_MAX_APELLIDO = 50;
+export const PERSONA_MAX_NOMBRE = 50;
+export const PERSONA_MAX_RAZ_SOC = 250;
+export const PERSONA_MAX_NOMBRE_COMERCIAL = 100;
+export const PERSONA_MAX_DIRECCION = 255;

@@ -1,0 +1,321 @@
+<div class="empresas">
+  <erp-page-header title="Empresas" [breadcrumbs]="false">
+    <button
+      headerActions
+      type="button"
+      class="btn-cerrar"
+      title="Volver"
+      aria-label="Volver"
+      (click)="onCerrar()"
+    >
+      <erp-icon name="close" />
+    </button>
+  </erp-page-header>
+
+  <!-- ⚠ Los DOS filtros se resuelven en el cliente. No es una decisión de esta pantalla:
+       `basic.paempresa_leer()` no acepta ningún argumento, así que no hay nada que
+       delegarle al servidor. -->
+  <erp-filter-panel [head]="false">
+    <div class="filter-fields" [formGroup]="filters">
+      <label class="field field--search">
+        <span>Buscar</span>
+        <input
+          type="text"
+          formControlName="q"
+          placeholder="Razón social, RUC, abreviatura…"
+          (keyup.enter)="onApply()"
+        />
+      </label>
+
+      <label class="field">
+        <span>Estado</span>
+        <select formControlName="estado">
+          <option value="todas">Todos</option>
+          <option value="activos">Activos</option>
+          <option value="inactivos">Solo inactivos</option>
+        </select>
+      </label>
+
+      <div class="field field--action">
+        <button type="button" class="btn" (click)="onApply()">
+          <erp-icon name="search" /> Buscar
+        </button>
+      </div>
+    </div>
+
+    <!-- Sin botón de borrado múltiple: este recurso no tiene endpoint de lote. -->
+    <div filterActions>
+      <erp-export-menu (exportar)="onExportar($event)" />
+      <button type="button" class="btn" (click)="onNuevo()">
+        <erp-icon name="plus" /> Nueva
+      </button>
+    </div>
+  </erp-filter-panel>
+
+  @if (error(); as err) {
+    <div class="alert-error alert-error--box">{{ err }}</div>
+  }
+
+  <!-- `selectable` apagado a propósito: no hay borrado en lote, así que unas casillas
+       prometerían una acción que no existe. -->
+  <erp-data-grid
+    [columns]="columns"
+    [rows]="rowsPagina()"
+    [loading]="loading()"
+    [selectable]="false"
+    [reorderable]="!filtrando()"
+    (rowReorder)="onReorder($event)"
+  >
+    <ng-template [erpCell]="'nombre'" let-row>
+      <div class="celda-nombre">
+        <span class="celda-nombre__razon">{{ row.nombre }}</span>
+        @if (row.nombre_comercial) {
+          <small class="celda-nombre__comercial">{{ row.nombre_comercial }}</small>
+        }
+      </div>
+    </ng-template>
+
+    <ng-template [erpCell]="'abreviatura'" let-row>
+      @if (row.abreviatura) { {{ row.abreviatura }} } @else { <span class="vacio">—</span> }
+    </ng-template>
+
+    <!-- Distrito, provincia y departamento en una sola celda: por separado serían tres
+         columnas que casi siempre repiten lo mismo. -->
+    <ng-template [erpCell]="'distrito_nombre'" let-row>
+      @if (row.distrito_nombre) {
+        <div class="celda-ubicacion">
+          <span>{{ row.distrito_nombre }}</span>
+          <small>{{ row.provincia_nombre }}, {{ row.departamento_nombre }}</small>
+        </div>
+      } @else {
+        <span class="vacio">—</span>
+      }
+    </ng-template>
+
+    <!-- Locales de la empresa (basic.empresa_almacen): derivado y de solo lectura. Con 0 se
+         deja en gris —un cero repetido es ruido—, con 1 se dice con palabras. -->
+    <ng-template [erpCell]="'cantidad_almacenes'" let-row>
+      @if (row.cantidad_almacenes > 1) {
+        <span class="badge badge--info badge--conteo">{{ row.cantidad_almacenes }}</span> locales
+      } @else if (row.cantidad_almacenes === 1) {
+        Un local
+      } @else {
+        <span class="vacio">—</span>
+      }
+    </ng-template>
+
+    <ng-template [erpCell]="'estado'" let-row>
+      <button
+        type="button"
+        class="badge"
+        [class.badge--on]="row.estado"
+        [class.badge--off]="!row.estado"
+        title="Cambiar estado"
+        (click)="onToggleEstado(row); $event.stopPropagation()"
+      >
+        {{ row.estado ? 'Activo' : 'Inactivo' }}
+      </button>
+    </ng-template>
+
+    <ng-template #rowActions let-row>
+      <button type="button" class="grid-action" title="Editar" (click)="onEditar(row)">
+        <erp-icon name="edit" />
+      </button>
+      <button
+        type="button"
+        class="grid-action grid-action--danger"
+        title="Eliminar"
+        (click)="onEliminar(row)"
+      >
+        <erp-icon name="trash" />
+      </button>
+    </ng-template>
+
+    <erp-grid-footer
+      gridPagination
+      [meta]="meta()"
+      [pageSizes]="pageSizes"
+      (pageChange)="onPage($event)"
+      (pageSizeChange)="onPageSize($event)"
+    />
+  </erp-data-grid>
+
+  @if (filtrando()) {
+    <p class="hint">
+      El orden solo se puede cambiar con el catálogo entero a la vista: sin texto buscado, con
+      el estado en «Todos» y en una sola página.
+    </p>
+  }
+</div>
+
+<!-- Alta y edición. Mismo formulario para ambas: el backend usa una sola función con un
+     indicador de "nuevo". -->
+<erp-modal [(open)]="modalAbierto" [title]="tituloModal()" (closed)="onCerrarModal()">
+  <form class="form form--empresa" [formGroup]="form" (ngSubmit)="onGuardar()">
+    <div class="form__fila">
+      <label class="field field--ruc">
+        <span>RUC <em class="req">*</em></span>
+        <input
+          type="text"
+          formControlName="ruc"
+          inputmode="numeric"
+          [maxlength]="longitudRuc"
+          autocomplete="off"
+          placeholder="20123456789"
+        />
+        @if (form.controls.ruc.touched && form.controls.ruc.hasError('required')) {
+          <small class="field__error">El RUC es obligatorio.</small>
+        } @else if (form.controls.ruc.touched && form.controls.ruc.hasError('pattern')) {
+          <small class="field__error">El RUC son {{ longitudRuc }} dígitos exactos.</small>
+        }
+      </label>
+
+      <label class="field field--crece">
+        <span>Razón social <em class="req">*</em></span>
+        <input
+          type="text"
+          formControlName="nombre"
+          [maxlength]="maxNombre"
+          autocomplete="off"
+          placeholder="MI EMPRESA S.A.C."
+        />
+        @if (form.controls.nombre.touched && form.controls.nombre.hasError('required')) {
+          <small class="field__error">La razón social es obligatoria.</small>
+        }
+      </label>
+    </div>
+
+    <div class="form__fila">
+      <!-- ⚠ El nombre comercial es varchar(20) y la abreviatura varchar(100): al revés de lo
+           que sugieren los nombres. Los maxlength salen de la columna. -->
+      <label class="field">
+        <span>Nombre comercial</span>
+        <input
+          type="text"
+          formControlName="nombre_comercial"
+          [maxlength]="maxNombreComercial"
+          autocomplete="off"
+        />
+        <small class="field__hint">Hasta {{ maxNombreComercial }} caracteres.</small>
+      </label>
+
+      <label class="field">
+        <span>Abreviatura</span>
+        <input
+          type="text"
+          formControlName="abreviatura"
+          [maxlength]="maxAbreviatura"
+          autocomplete="off"
+        />
+      </label>
+    </div>
+
+    <div class="form__fila">
+      <!-- `div` y no `label`: el control real de `erp-combo-search` es un <button> que vive
+           dentro del componente, asi que un <label> envolvente no puede asociarse a el. La
+           etiqueta accesible la lleva el propio boton. -->
+      <div class="field field--crece">
+        <span>Corporación <em class="req">*</em></span>
+        <erp-combo-search
+          formControlName="corporacionid"
+          [items]="corporaciones()"
+          bindValue="corporacionid"
+          bindLabel="nombre"
+          placeholder="Seleccionar corporación…"
+          [clearable]="false"
+        />
+        @if (form.controls.corporacionid.touched && form.controls.corporacionid.invalid) {
+          <small class="field__error">Seleccione una corporación.</small>
+        }
+      </div>
+    </div>
+
+    <!-- ⚠ El distrito NO es un desplegable lleno: son 1.839 filas y el backend exige acotar.
+         Por eso hay un buscador propio delante del combo. -->
+    <div class="form__fila form__fila--distrito">
+      <label class="field field--crece">
+        <span>Buscar distrito</span>
+        <input
+          type="text"
+          autocomplete="off"
+          [placeholder]="'Escriba al menos ' + minBusquedaDistrito + ' letras…'"
+          (input)="onBuscarDistrito($any($event.target).value)"
+        />
+        <small class="field__hint">
+          @if (buscandoDistritos()) {
+            Buscando…
+          } @else {
+            El catálogo tiene 1.839 distritos: hay que acotar la búsqueda.
+          }
+        </small>
+      </label>
+
+      <!-- `div` y no `label`: el control real de `erp-combo-search` es un <button> que vive
+           dentro del componente, asi que un <label> envolvente no puede asociarse a el. La
+           etiqueta accesible la lleva el propio boton. -->
+      <div class="field field--crece">
+        <span>Distrito <em class="req">*</em></span>
+        <erp-combo-search
+          formControlName="distritoid"
+          [items]="opcionesDistrito()"
+          bindValue="distritoid"
+          bindLabel="etiqueta"
+          bindSearch="nombre"
+          placeholder="Seleccionar distrito…"
+          [clearable]="false"
+        />
+        @if (form.controls.distritoid.touched && form.controls.distritoid.invalid) {
+          <small class="field__error">Seleccione un distrito.</small>
+        }
+      </div>
+    </div>
+
+    <label class="field">
+      <span>Dirección</span>
+      <input
+        type="text"
+        formControlName="direccion"
+        [maxlength]="maxDireccion"
+        autocomplete="off"
+      />
+    </label>
+
+    <div class="form__fila">
+      <label class="field">
+        <span>Teléfono</span>
+        <input
+          type="text"
+          formControlName="telefono"
+          [maxlength]="maxTelefono"
+          autocomplete="off"
+        />
+      </label>
+
+      <label class="field">
+        <span>Email</span>
+        <input type="text" formControlName="email" [maxlength]="maxEmail" autocomplete="off" />
+      </label>
+    </div>
+
+    <label class="field">
+      <span>Sitio web</span>
+      <input type="text" formControlName="url" [maxlength]="maxUrl" autocomplete="off" />
+    </label>
+
+    <p class="form__nota">
+      El IGV, los certificados y las series se configuran en otra pantalla. El orden y el
+      estado se cambian desde el listado, arrastrando la fila y pulsando su etiqueta.
+    </p>
+
+    <!-- Submit oculto: hace que Enter envíe el formulario, ya que el botón real vive en el
+         pie del modal, fuera del <form>. -->
+    <button type="submit" hidden></button>
+  </form>
+
+  <div modalFooter>
+    <button type="button" class="btn btn--ghost" (click)="onCerrarModal()">Cancelar</button>
+    <button type="button" class="btn" [disabled]="guardando()" (click)="onGuardar()">
+      {{ guardando() ? 'Guardando…' : 'Guardar' }}
+    </button>
+  </div>
+</erp-modal>

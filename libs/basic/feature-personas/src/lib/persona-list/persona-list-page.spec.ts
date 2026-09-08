@@ -202,7 +202,9 @@ describe('PersonaListPage', () => {
     const { fixture, api, el } = await setup();
     vi.spyOn(TestBed.inject(ConfirmService), 'ask').mockResolvedValue(false);
 
-    (el.querySelector('.col-actions .grid-action') as HTMLButtonElement).click();
+    // ⚠ Ahora hay DOS acciones por fila —editar y eliminar—; se apunta a la de borrar
+    // por su clase, no por ser la primera.
+    (el.querySelector('.col-actions .grid-action--danger') as HTMLButtonElement).click();
     fixture.detectChanges();
     await fixture.whenStable();
 
@@ -213,7 +215,9 @@ describe('PersonaListPage', () => {
     const { fixture, api, el } = await setup();
     vi.spyOn(TestBed.inject(ConfirmService), 'ask').mockResolvedValue(true);
 
-    (el.querySelector('.col-actions .grid-action') as HTMLButtonElement).click();
+    // ⚠ Ahora hay DOS acciones por fila —editar y eliminar—; se apunta a la de borrar
+    // por su clase, no por ser la primera.
+    (el.querySelector('.col-actions .grid-action--danger') as HTMLButtonElement).click();
     fixture.detectChanges();
     await fixture.whenStable();
 
